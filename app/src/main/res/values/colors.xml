@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MotoGallery Obsidian Dark Palette -->
+    <color name="bg_dark">#0B1020</color>
+    <color name="surface_dark">#131A2E</color>
+    <color name="surface_variant_dark">#1A233D</color>
+    <color name="accent_violet">#A855F7</color>
+    <color name="accent_pink">#EC65B5</color>
+    <color name="accent_orange">#FFA34D</color>
+    <color name="text_primary">#F8FAFC</color>
+    <color name="text_secondary">#94A3B8</color>
+</resources>

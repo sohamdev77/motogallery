@@ -1,0 +1,93 @@
+name: Release APK
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+        default: 'v1.0.0'
+
+jobs:
+  release:
+    name: Build & Publish Release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Prepare Signing Keystore (if provided in secrets)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+            echo "SIGNING_KEYSTORE_PATH=keystore.jks" >> $GITHUB_ENV
+            echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+            echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
+            echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+          else
+            echo "No custom release keystore secret configured. Building unsigned/debug-signed build."
+          fi
+
+      - name: Run Tests
+        run: ./gradlew test
+
+      - name: Build APKs (Release & Debug)
+        run: |
+          ./gradlew assembleRelease || ./gradlew assembleDebug
+
+      - name: Collect Release Artifacts
+        id: collect_apks
+        run: |
+          mkdir -p release_apks
+          if [ -f app/build/outputs/apk/release/*.apk ]; then
+            cp app/build/outputs/apk/release/*.apk release_apks/
+          fi
+          if [ -f app/build/outputs/apk/debug/*.apk ]; then
+            cp app/build/outputs/apk/debug/*.apk release_apks/
+          fi
+          ls -la release_apks/
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name || inputs.tag_name }}
+          name: "MotoGallery ${{ github.ref_name || inputs.tag_name }}"
+          draft: false
+          prerelease: false
+          files: release_apks/*.apk
+          body: |
+            ### MotoGallery Release ${{ github.ref_name || inputs.tag_name }}
+
+            Native Android gallery built for privacy, performance, and offline reliability.
+
+            #### What's in this release:
+            - **Photo & Video Discovery**: Blazing fast chronological MediaStore grid.
+            - **Media3 ExoPlayer**: Full-screen video player with swipe brightness & volume gestures.
+            - **Encrypted Private Vault**: Hardware-backed AES-256-GCM authenticated encryption + Biometrics.
+            - **Recently Deleted (Trash)**: Dual public & 30-day vault retention trash.
+            - **Built-in Photo Editor**: Crop, rotate, flip, straighten, adjustments & Moto neon filters.
+            - **Built-in Video Editor**: Frame-accurate trimming and audio stripping.
+
+            #### How to Install on Motorola Phone:
+            1. Download the `.apk` file below on your Motorola device.
+            2. Open the downloaded file from notifications or your Files app.
+            3. When prompted, tap **Settings** and enable **Allow from this source**.
+            4. Tap **Install** to finish setup.

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MotoGallery</string>
+    <string name="photos_tab">Photos</string>
+    <string name="albums_tab">Albums</string>
+    <string name="videos_tab">Videos</string>
+    <string name="vault_tab">Private</string>
+    <string name="settings_tab">Settings</string>
+    
+    <string name="permission_title">Media Access Required</string>
+    <string name="permission_desc">MotoGallery requires permission to access photos and videos on your device to display your media offline.</string>
+    <string name="permission_grant">Grant Access</string>
+    <string name="permission_partial_notice">Partial access granted. You can select more photos anytime.</string>
+    <string name="permission_manage">Manage</string>
+
+    <string name="vault_title">Private Vault</string>
+    <string name="vault_setup_title">Set Up Vault</string>
+    <string name="vault_setup_desc">Create a secure PIN to encrypt and protect private photos and videos.</string>
+    <string name="vault_unlock_title">Unlock Vault</string>
+    <string name="vault_unlock_desc">Enter your PIN or use biometrics to access private media.</string>
+    <string name="vault_empty">No private items yet</string>
+    <string name="vault_empty_desc">Select photos or videos in the gallery and choose \'Move to Private Vault\'.</string>
+</resources>
