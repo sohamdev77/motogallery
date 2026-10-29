@@ -122,13 +122,12 @@ import kotlin.math.roundToInt
 @Composable
 fun SwipeCleanScreen(
     viewModel: SwipeCleanViewModel,
-    onRequestConsent: (IntentSender) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val wallpaperConfig = LocalWallpaperConfig.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
 
     var showFilterSheet by remember { mutableStateOf(false) }
 

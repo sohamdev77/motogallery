@@ -102,15 +102,21 @@ class MediaViewerViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    private val vaultManager = app.vaultManager
+
     fun requestDeleteCurrent(
-        onConsentRequired: (IntentSender) -> Unit,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
         onDeleted: () -> Unit
     ) {
         val item = _uiState.value.currentItem ?: return
         viewModelScope.launch {
             when (val res = operationsHelper.requestTrashMedia(listOf(item.uri), trash = true)) {
                 is MediaOperationResult.RequiresConsent -> {
-                    onConsentRequired(res.intentSender)
+                    onRequestConsent(res.intentSender) { granted ->
+                        if (granted) {
+                            onDeleted()
+                        }
+                    }
                 }
                 is MediaOperationResult.Success -> {
                     onDeleted()
@@ -120,16 +126,57 @@ class MediaViewerViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun moveToVault(
+        item: MediaItem,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
+        onMoved: () -> Unit
+    ) {
+        viewModelScope.launch {
+            val res = vaultManager.importMedia(
+                sourceUri = item.uri,
+                originalName = item.displayName,
+                mimeType = item.mimeType,
+                isVideo = item.isVideo,
+                size = item.size,
+                durationMs = item.durationMs,
+                width = item.width,
+                height = item.height
+            )
+            if (res.isSuccess) {
+                val paths = if (item.path.isNotBlank()) listOf(item.path) else emptyList()
+                when (val delRes = operationsHelper.requestDeleteMedia(listOf(item.uri), paths)) {
+                    is MediaOperationResult.RequiresConsent -> {
+                        onRequestConsent(delRes.intentSender) { granted ->
+                            if (granted) {
+                                if (item.path.isNotBlank()) java.io.File(item.path).delete()
+                                onMoved()
+                            }
+                        }
+                    }
+                    is MediaOperationResult.Success -> {
+                        if (item.path.isNotBlank()) java.io.File(item.path).delete()
+                        onMoved()
+                    }
+                    else -> {
+                        onMoved()
+                    }
+                }
+            }
+        }
+    }
+
     fun renameCurrent(
         newName: String,
-        onConsentRequired: (IntentSender) -> Unit,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
         onSuccess: () -> Unit
     ) {
         val item = _uiState.value.currentItem ?: return
         viewModelScope.launch {
             when (val res = operationsHelper.renameMedia(item, newName)) {
                 is MediaOperationResult.RequiresConsent -> {
-                    onConsentRequired(res.intentSender)
+                    onRequestConsent(res.intentSender) { granted ->
+                        if (granted) onSuccess()
+                    }
                 }
                 is MediaOperationResult.Success -> {
                     onSuccess()

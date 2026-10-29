@@ -110,8 +110,8 @@ class MainActivity : FragmentActivity() {
 
                         AppNavGraph(
                             navController = navController,
-                            onRequestConsent = { intentSender ->
-                                launchSystemConsentDialog(intentSender)
+                            onRequestConsent = { intentSender, onResult ->
+                                launchSystemConsentDialog(intentSender, onResult)
                             },
                             onRequestPermissions = {
                                 permissionsLauncher.launch(PermissionUtils.getRequiredMediaPermissions())

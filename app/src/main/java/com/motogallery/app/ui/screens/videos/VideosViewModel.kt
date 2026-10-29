@@ -1,9 +1,14 @@
 package com.motogallery.app.ui.screens.videos
 
 import android.app.Application
+import android.content.IntentSender
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.motogallery.app.MotoGalleryApp
+import com.motogallery.app.data.local.entity.FavoriteEntity
+import com.motogallery.app.data.mediastore.MediaOperationResult
+import com.motogallery.app.data.mediastore.MediaOperationsHelper
 import com.motogallery.app.data.mediastore.MediaStoreRepository
 import com.motogallery.app.data.model.MediaItem
 import com.motogallery.app.data.model.SortBy
@@ -13,6 +18,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import java.io.File
 
 data class VideosUiState(
     val videos: List<MediaItem> = emptyList(),
@@ -77,6 +84,12 @@ class VideosViewModel(application: Application) : AndroidViewModel(application) 
         initialValue = VideosUiState()
     )
 
+    private val operationsHelper = MediaOperationsHelper(app)
+    private val vaultManager = app.vaultManager
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
     fun setSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -93,5 +106,107 @@ class VideosViewModel(application: Application) : AndroidViewModel(application) 
 
     fun clearSelection() {
         _selectedIds.value = emptySet()
+    }
+
+    fun toggleFavoriteSelected() {
+        viewModelScope.launch {
+            val selected = uiState.value.selectedItems
+            val allFav = selected.all { it.isFavorite }
+            if (allFav) {
+                favoriteDao.deleteFavorites(selected.map { it.id })
+            } else {
+                for (item in selected) {
+                    favoriteDao.insertFavorite(
+                        FavoriteEntity(mediaId = item.id, uriString = item.uri.toString())
+                    )
+                }
+            }
+            clearSelection()
+        }
+    }
+
+    fun requestDeleteSelected(
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
+        onComplete: () -> Unit
+    ) {
+        viewModelScope.launch {
+            val selected = uiState.value.selectedItems
+            val uris = selected.map { it.uri }
+            when (val res = operationsHelper.requestTrashMedia(uris, trash = true)) {
+                is MediaOperationResult.RequiresConsent -> {
+                    onRequestConsent(res.intentSender) { granted ->
+                        if (granted) {
+                            clearSelection()
+                            onComplete()
+                        }
+                    }
+                }
+                is MediaOperationResult.Success -> {
+                    clearSelection()
+                    onComplete()
+                }
+                is MediaOperationResult.Error -> {
+                    _errorMessage.value = res.message
+                }
+            }
+        }
+    }
+
+    fun moveToVault(
+        items: List<MediaItem>,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
+        onSuccess: (importedCount: Int) -> Unit
+    ) {
+        viewModelScope.launch {
+            var importedCount = 0
+            val successfulOriginalUris = mutableListOf<Uri>()
+            val successfulOriginalPaths = mutableListOf<String>()
+
+            for (item in items) {
+                val res = vaultManager.importMedia(
+                    sourceUri = item.uri,
+                    originalName = item.displayName,
+                    mimeType = item.mimeType,
+                    isVideo = item.isVideo,
+                    size = item.size,
+                    durationMs = item.durationMs,
+                    width = item.width,
+                    height = item.height
+                )
+                if (res.isSuccess) {
+                    importedCount++
+                    successfulOriginalUris.add(item.uri)
+                    if (item.path.isNotBlank()) successfulOriginalPaths.add(item.path)
+                }
+            }
+
+            clearSelection()
+
+            if (successfulOriginalUris.isNotEmpty()) {
+                onSuccess(importedCount)
+                // Request user consent to delete public originals so they are only visible in vault!
+                when (val delRes = operationsHelper.requestDeleteMedia(successfulOriginalUris, successfulOriginalPaths)) {
+                    is MediaOperationResult.RequiresConsent -> {
+                        onRequestConsent(delRes.intentSender) { granted ->
+                            if (granted) {
+                                successfulOriginalPaths.forEach { File(it).delete() }
+                                viewModelScope.launch {
+                                    favoriteDao.deleteFavorites(items.map { it.id })
+                                }
+                            }
+                        }
+                    }
+                    is MediaOperationResult.Success -> {
+                        successfulOriginalPaths.forEach { File(it).delete() }
+                        favoriteDao.deleteFavorites(items.map { it.id })
+                    }
+                    else -> {}
+                }
+            }
+        }
+    }
+
+    fun clearError() {
+        _errorMessage.value = null
     }
 }

@@ -202,7 +202,7 @@ class SwipeCleanViewModel(application: Application) : AndroidViewModel(applicati
         _uiState.value = _uiState.value.copy(showTrashConfirmDialog = show)
     }
 
-    fun executeTrashQueue(onRequestConsent: (IntentSender) -> Unit) {
+    fun executeTrashQueue(onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit) {
         val trashList = _uiState.value.reviewedTrashQueue
         if (trashList.isEmpty()) return
 
@@ -212,7 +212,9 @@ class SwipeCleanViewModel(application: Application) : AndroidViewModel(applicati
             when (val result = operationsHelper.requestTrashMedia(uris, trash = true)) {
                 is MediaOperationResult.RequiresConsent -> {
                     _uiState.value = _uiState.value.copy(isLoading = false)
-                    onRequestConsent(result.intentSender)
+                    onRequestConsent(result.intentSender) { granted ->
+                        onConsentResult(granted)
+                    }
                 }
                 is MediaOperationResult.Success -> {
                     onTrashSuccess(trashList)

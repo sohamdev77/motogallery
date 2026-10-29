@@ -68,7 +68,7 @@ import kotlinx.coroutines.launch
 fun PhotosScreen(
     viewModel: PhotosViewModel,
     onNavigateToViewer: (Long) -> Unit,
-    onRequestConsent: (IntentSender) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     onRequestPermissions: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -79,7 +79,6 @@ fun PhotosScreen(
 
     val hasFullAccess = remember(context) { PermissionUtils.hasFullMediaAccess(context) }
     val isPartialAccess = remember(context) { PermissionUtils.hasPartialMediaAccess(context) }
-    val hasAnyAccess = remember(context) { PermissionUtils.hasAnyMediaAccess(context) }
 
     var showFilterSortSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -274,7 +273,7 @@ fun PhotosScreen(
             isDestructive = true,
             onConfirm = {
                 viewModel.requestDeleteSelected(
-                    onConsentRequired = onRequestConsent,
+                    onRequestConsent = onRequestConsent,
                     onComplete = {
                         scope.launch {
                             snackbarHostState.showSnackbar("Media moved to trash")
@@ -290,16 +289,16 @@ fun PhotosScreen(
     if (showVaultConfirmDialog) {
         ConfirmationDialog(
             title = "Move to Private Vault",
-            message = "Selected items will be encrypted with AES-256-GCM and stored in your private vault. Once imported, you will be prompted to delete the public originals from your gallery.",
+            message = "Selected items will be encrypted with AES-256-GCM and stored in your private vault. The public copies will be deleted so they are only visible in your vault.",
             confirmText = "Move to Vault",
             isDestructive = false,
             onConfirm = {
                 viewModel.moveToVault(
                     items = uiState.selectedItems,
-                    onConsentToDeleteOriginal = onRequestConsent,
+                    onRequestConsent = onRequestConsent,
                     onSuccess = { count ->
                         scope.launch {
-                            snackbarHostState.showSnackbar("Encrypted and secured $count item(s) into vault")
+                            snackbarHostState.showSnackbar("Secured $count item(s) in vault; deleting public copies...")
                         }
                     }
                 )

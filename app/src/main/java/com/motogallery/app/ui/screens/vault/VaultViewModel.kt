@@ -8,6 +8,8 @@ import androidx.lifecycle.viewModelScope
 import com.motogallery.app.MotoGalleryApp
 import com.motogallery.app.data.mediastore.MediaOperationResult
 import com.motogallery.app.data.mediastore.MediaOperationsHelper
+import com.motogallery.app.data.mediastore.MediaStoreRepository
+import com.motogallery.app.data.model.MediaItem
 import com.motogallery.app.data.model.VaultItem
 import com.motogallery.app.data.vault.BiometricAuthManager
 import com.motogallery.app.data.vault.VaultCryptoManager
@@ -45,6 +47,7 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
     private val vaultManager = app.vaultManager
     private val biometricManager = BiometricAuthManager(app)
     private val operationsHelper = MediaOperationsHelper(app)
+    private val mediaStoreRepository = MediaStoreRepository(app)
 
     private val _selectedIds = MutableStateFlow<Set<Long>>(emptySet())
     val selectedIds: StateFlow<Set<Long>> = _selectedIds.asStateFlow()
@@ -157,13 +160,70 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun queryAvailablePublicMedia(): List<MediaItem> = mediaStoreRepository.queryAllMedia()
+
+    fun importMediaItems(
+        items: List<MediaItem>,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
+        onSuccess: (importedCount: Int) -> Unit
+    ) {
+        viewModelScope.launch {
+            var importedCount = 0
+            val urisToDelete = mutableListOf<Uri>()
+            val pathsToDelete = mutableListOf<String>()
+
+            for (item in items) {
+                val res = vaultManager.importMedia(
+                    sourceUri = item.uri,
+                    originalName = item.displayName,
+                    mimeType = item.mimeType,
+                    isVideo = item.isVideo,
+                    size = item.size,
+                    durationMs = item.durationMs,
+                    width = item.width,
+                    height = item.height
+                )
+                if (res.isSuccess) {
+                    importedCount++
+                    urisToDelete.add(item.uri)
+                    if (item.path.isNotBlank()) pathsToDelete.add(item.path)
+                }
+            }
+
+            if (importedCount > 0) {
+                onSuccess(importedCount)
+                // Delete public originals so they are ONLY visible in the vault
+                when (val delRes = operationsHelper.requestDeleteMedia(urisToDelete, pathsToDelete)) {
+                    is MediaOperationResult.RequiresConsent -> {
+                        onRequestConsent(delRes.intentSender) { granted ->
+                            if (granted) {
+                                pathsToDelete.forEach { java.io.File(it).delete() }
+                                _statusMessage.value = "Imported $importedCount item(s). Public original(s) deleted."
+                            } else {
+                                _errorMessage.value = "Imported into vault, but permission to delete public files was declined."
+                            }
+                        }
+                    }
+                    is MediaOperationResult.Success -> {
+                        pathsToDelete.forEach { java.io.File(it).delete() }
+                        _statusMessage.value = "Imported $importedCount item(s). Public original(s) deleted."
+                    }
+                    is MediaOperationResult.Error -> {
+                        pathsToDelete.forEach { java.io.File(it).delete() }
+                        _statusMessage.value = "Imported $importedCount item(s) into vault."
+                    }
+                }
+            }
+        }
+    }
+
     fun importMedia(
         uri: Uri,
         displayName: String,
         mimeType: String,
         isVideo: Boolean,
         size: Long,
-        onConsentToDeleteOriginal: (IntentSender) -> Unit
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit
     ) {
         viewModelScope.launch {
             val res = vaultManager.importMedia(
@@ -174,13 +234,29 @@ class VaultViewModel(application: Application) : AndroidViewModel(application) {
                 size = size
             )
             if (res.isSuccess) {
-                _statusMessage.value = "Encrypted and secured into vault"
-                // Propose deleting public original
-                when (val delRes = operationsHelper.requestDeleteMedia(listOf(uri))) {
+                val allPublic = mediaStoreRepository.queryAllMedia()
+                val matchingItem = allPublic.find {
+                    it.displayName == displayName || (it.size > 0 && it.size == size)
+                }
+                val resolvedUri = matchingItem?.uri ?: operationsHelper.resolveToMediaStoreUri(uri)
+                val paths = if (!matchingItem?.path.isNullOrBlank()) listOf(matchingItem!!.path) else emptyList()
+
+                when (val delRes = operationsHelper.requestDeleteMedia(listOf(resolvedUri), paths)) {
                     is MediaOperationResult.RequiresConsent -> {
-                        onConsentToDeleteOriginal(delRes.intentSender)
+                        onRequestConsent(delRes.intentSender) { granted ->
+                            if (granted) {
+                                paths.forEach { java.io.File(it).delete() }
+                                _statusMessage.value = "Secured into vault and deleted public copy."
+                            }
+                        }
                     }
-                    else -> {}
+                    is MediaOperationResult.Success -> {
+                        paths.forEach { java.io.File(it).delete() }
+                        _statusMessage.value = "Secured into vault and deleted public copy."
+                    }
+                    else -> {
+                        _statusMessage.value = "Encrypted and secured into vault."
+                    }
                 }
             } else {
                 _errorMessage.value = "Failed to encrypt media: ${res.exceptionOrNull()?.message}"

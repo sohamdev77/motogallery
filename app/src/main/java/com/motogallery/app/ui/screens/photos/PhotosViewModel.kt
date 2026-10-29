@@ -205,14 +205,20 @@ class PhotosViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun requestDeleteSelected(
-        onConsentRequired: (IntentSender) -> Unit,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
         onComplete: () -> Unit
     ) {
         viewModelScope.launch {
-            val uris = uiState.value.selectedItems.map { it.uri }
+            val selected = uiState.value.selectedItems
+            val uris = selected.map { it.uri }
             when (val res = operationsHelper.requestTrashMedia(uris, trash = true)) {
                 is MediaOperationResult.RequiresConsent -> {
-                    onConsentRequired(res.intentSender)
+                    onRequestConsent(res.intentSender) { granted ->
+                        if (granted) {
+                            clearSelection()
+                            onComplete()
+                        }
+                    }
                 }
                 is MediaOperationResult.Success -> {
                     clearSelection()
@@ -227,12 +233,13 @@ class PhotosViewModel(application: Application) : AndroidViewModel(application) 
 
     fun moveToVault(
         items: List<MediaItem>,
-        onConsentToDeleteOriginal: (IntentSender) -> Unit,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
         onSuccess: (importedCount: Int) -> Unit
     ) {
         viewModelScope.launch {
             var importedCount = 0
             val successfulOriginalUris = mutableListOf<Uri>()
+            val successfulOriginalPaths = mutableListOf<String>()
 
             for (item in items) {
                 val res = vaultManager.importMedia(
@@ -248,6 +255,7 @@ class PhotosViewModel(application: Application) : AndroidViewModel(application) 
                 if (res.isSuccess) {
                     importedCount++
                     successfulOriginalUris.add(item.uri)
+                    if (item.path.isNotBlank()) successfulOriginalPaths.add(item.path)
                 }
             }
 
@@ -255,10 +263,21 @@ class PhotosViewModel(application: Application) : AndroidViewModel(application) 
 
             if (successfulOriginalUris.isNotEmpty()) {
                 onSuccess(importedCount)
-                // Request user consent to delete public original
-                when (val delRes = operationsHelper.requestDeleteMedia(successfulOriginalUris)) {
+                // Request user consent to delete public originals so they are only visible in vault!
+                when (val delRes = operationsHelper.requestDeleteMedia(successfulOriginalUris, successfulOriginalPaths)) {
                     is MediaOperationResult.RequiresConsent -> {
-                        onConsentToDeleteOriginal(delRes.intentSender)
+                        onRequestConsent(delRes.intentSender) { granted ->
+                            if (granted) {
+                                successfulOriginalPaths.forEach { java.io.File(it).delete() }
+                                viewModelScope.launch {
+                                    favoriteDao.deleteFavorites(items.map { it.id })
+                                }
+                            }
+                        }
+                    }
+                    is MediaOperationResult.Success -> {
+                        successfulOriginalPaths.forEach { java.io.File(it).delete() }
+                        favoriteDao.deleteFavorites(items.map { it.id })
                     }
                     else -> {}
                 }

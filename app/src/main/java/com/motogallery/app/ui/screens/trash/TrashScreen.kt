@@ -78,7 +78,7 @@ import kotlinx.coroutines.launch
 fun TrashScreen(
     viewModel: TrashViewModel,
     onNavigateBack: () -> Unit,
-    onRequestConsent: (IntentSender) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -310,7 +310,7 @@ fun TrashScreen(
             confirmText = "Restore",
             onConfirm = {
                 viewModel.restoreSelected(
-                    onConsentRequired = onRequestConsent,
+                    onRequestConsent = onRequestConsent,
                     onSuccess = {
                         scope.launch { snackbarHostState.showSnackbar("Restored media items") }
                     }
@@ -328,7 +328,7 @@ fun TrashScreen(
             isDestructive = true,
             onConfirm = {
                 viewModel.permanentlyDeleteSelected(
-                    onConsentRequired = onRequestConsent,
+                    onRequestConsent = onRequestConsent,
                     onSuccess = {
                         scope.launch { snackbarHostState.showSnackbar("Media permanently removed") }
                     }

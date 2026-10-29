@@ -31,29 +31,70 @@ class MediaOperationsHelper(private val context: Context) {
     suspend fun requestTrashMedia(uris: List<Uri>, trash: Boolean = true): MediaOperationResult = withContext(Dispatchers.IO) {
         if (uris.isEmpty()) return@withContext MediaOperationResult.Success(0)
 
+        val resolvedUris = uris.map { resolveToMediaStoreUri(it) }
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
-                val pendingIntent = MediaStore.createTrashRequest(contentResolver, uris, trash)
+                val pendingIntent = MediaStore.createTrashRequest(contentResolver, resolvedUris, trash)
                 MediaOperationResult.RequiresConsent(pendingIntent.intentSender)
             } catch (e: Exception) {
                 MediaOperationResult.Error("Failed to create trash request: ${e.message}", e)
             }
         } else {
             // Android 10 and below doesn't have system MediaStore trash, fallback to delete
-            requestDeleteMedia(uris)
+            requestDeleteMedia(resolvedUris)
         }
     }
 
     /**
-     * Request system consent to permanently delete public media.
-     * Never deletes public files silently.
+     * Request deletion of media items.
+     * Attempts direct deletion for app-owned or unconstrained files, and requests
+     * system authorization via MediaStore.createDeleteRequest for Scoped Storage items.
      */
-    suspend fun requestDeleteMedia(uris: List<Uri>): MediaOperationResult = withContext(Dispatchers.IO) {
-        if (uris.isEmpty()) return@withContext MediaOperationResult.Success(0)
+    suspend fun requestDeleteMedia(
+        uris: List<Uri>,
+        paths: List<String> = emptyList()
+    ): MediaOperationResult = withContext(Dispatchers.IO) {
+        if (uris.isEmpty() && paths.isEmpty()) return@withContext MediaOperationResult.Success(0)
 
+        var directlyDeleted = 0
+        val remainingUris = mutableListOf<Uri>()
+
+        // 1. Try deleting physical files if paths are provided
+        for (path in paths) {
+            try {
+                val f = java.io.File(path)
+                if (f.exists() && f.delete()) {
+                    directlyDeleted++
+                }
+            } catch (_: Exception) {}
+        }
+
+        // 2. Try direct ContentResolver deletion first (succeeds if owned by app or pre-Android 10)
+        for (rawUri in uris) {
+            val uri = resolveToMediaStoreUri(rawUri)
+            try {
+                val rows = contentResolver.delete(uri, null, null)
+                if (rows > 0) {
+                    directlyDeleted += rows
+                } else {
+                    remainingUris.add(uri)
+                }
+            } catch (e: SecurityException) {
+                remainingUris.add(uri)
+            } catch (e: Exception) {
+                remainingUris.add(uri)
+            }
+        }
+
+        if (remainingUris.isEmpty()) {
+            return@withContext MediaOperationResult.Success(directlyDeleted)
+        }
+
+        // 3. For remaining items needing system consent on Android 11+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
-                val pendingIntent = MediaStore.createDeleteRequest(contentResolver, uris)
+                val pendingIntent = MediaStore.createDeleteRequest(contentResolver, remainingUris)
                 MediaOperationResult.RequiresConsent(pendingIntent.intentSender)
             } catch (e: Exception) {
                 MediaOperationResult.Error("Failed to create delete request: ${e.message}", e)
@@ -62,10 +103,10 @@ class MediaOperationsHelper(private val context: Context) {
             // Android 10 RecoverableSecurityException
             try {
                 var deleted = 0
-                for (uri in uris) {
+                for (uri in remainingUris) {
                     deleted += contentResolver.delete(uri, null, null)
                 }
-                MediaOperationResult.Success(deleted)
+                MediaOperationResult.Success(directlyDeleted + deleted)
             } catch (e: SecurityException) {
                 if (e is RecoverableSecurityException) {
                     MediaOperationResult.RequiresConsent(e.userAction.actionIntent.intentSender)
@@ -79,14 +120,41 @@ class MediaOperationsHelper(private val context: Context) {
             // Android 9 and below
             try {
                 var deleted = 0
-                for (uri in uris) {
+                for (uri in remainingUris) {
                     deleted += contentResolver.delete(uri, null, null)
                 }
-                MediaOperationResult.Success(deleted)
+                MediaOperationResult.Success(directlyDeleted + deleted)
             } catch (e: Exception) {
                 MediaOperationResult.Error("Failed to delete media: ${e.message}", e)
             }
         }
+    }
+
+    /**
+     * Resolves potentially non-standard URIs (such as Android PhotoPicker URIs)
+     * to standard MediaStore Content URIs where possible.
+     */
+    fun resolveToMediaStoreUri(uri: Uri): Uri {
+        val uriStr = uri.toString()
+        if (uriStr.startsWith("content://media/external/")) {
+            return uri
+        }
+
+        // Android PhotoPicker URI: content://media/picker/... or content://...photopicker...
+        if (uri.authority?.contains("photopicker") == true || uriStr.contains("/picker/")) {
+            val lastSegment = uri.lastPathSegment
+            val id = lastSegment?.toLongOrNull()
+            if (id != null) {
+                // Check if it exists in Images or Video
+                val mime = try { contentResolver.getType(uri) } catch (_: Exception) { null }
+                return if (mime?.startsWith("video/") == true) {
+                    android.content.ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                } else {
+                    android.content.ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                }
+            }
+        }
+        return uri
     }
 
     /**

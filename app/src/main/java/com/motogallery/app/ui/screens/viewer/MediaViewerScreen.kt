@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Share
@@ -84,7 +85,7 @@ fun MediaViewerScreen(
     onNavigateToPhotoEditor: (Uri) -> Unit,
     onNavigateToVideoEditor: (Uri) -> Unit,
     onNavigateToVideoPlayer: (Uri) -> Unit,
-    onRequestConsent: (IntentSender) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -94,6 +95,7 @@ fun MediaViewerScreen(
     val exifSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showVaultConfirmDialog by remember { mutableStateOf(false) }
     var showRenameDialog by remember { mutableStateOf(false) }
     var showMoreMenu by remember { mutableStateOf(false) }
 
@@ -323,6 +325,15 @@ fun MediaViewerScreen(
                         )
                     }
 
+                    // Move to Private Vault
+                    IconButton(onClick = { showVaultConfirmDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Move to Vault",
+                            tint = MotoViolet
+                        )
+                    }
+
                     // Delete
                     IconButton(onClick = { showDeleteConfirmDialog = true }) {
                         Icon(
@@ -354,11 +365,29 @@ fun MediaViewerScreen(
             isDestructive = true,
             onConfirm = {
                 viewModel.requestDeleteCurrent(
-                    onConsentRequired = onRequestConsent,
+                    onRequestConsent = onRequestConsent,
                     onDeleted = onNavigateBack
                 )
             },
             onDismiss = { showDeleteConfirmDialog = false }
+        )
+    }
+
+    // Move to Vault confirmation dialog
+    if (showVaultConfirmDialog) {
+        ConfirmationDialog(
+            title = "Move to Private Vault",
+            message = "Move \"${currentItem.displayName}\" to your private vault? It will be encrypted with AES-256-GCM and deleted from your public gallery.",
+            confirmText = "Move to Vault",
+            isDestructive = false,
+            onConfirm = {
+                viewModel.moveToVault(
+                    item = currentItem,
+                    onRequestConsent = onRequestConsent,
+                    onMoved = onNavigateBack
+                )
+            },
+            onDismiss = { showVaultConfirmDialog = false }
         )
     }
 
@@ -371,7 +400,7 @@ fun MediaViewerScreen(
             onConfirm = { newName ->
                 viewModel.renameCurrent(
                     newName = newName,
-                    onConsentRequired = onRequestConsent,
+                    onRequestConsent = onRequestConsent,
                     onSuccess = {
                         viewModel.loadMetadataForCurrent()
                     }

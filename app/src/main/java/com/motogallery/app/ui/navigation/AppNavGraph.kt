@@ -47,7 +47,7 @@ import com.motogallery.app.ui.theme.MotoBackground
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
-    onRequestConsent: (IntentSender) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     onRequestPermissions: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -157,7 +157,8 @@ fun AppNavGraph(
                     viewModel = videosViewModel,
                     onNavigateToVideoPlayer = { uri ->
                         navController.navigate(Screen.VideoPlayer.createRoute(uri))
-                    }
+                    },
+                    onRequestConsent = onRequestConsent
                 )
             }
 

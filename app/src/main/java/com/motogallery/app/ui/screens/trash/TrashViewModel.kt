@@ -111,7 +111,7 @@ class TrashViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun restoreSelected(
-        onConsentRequired: (IntentSender) -> Unit,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
@@ -129,7 +129,9 @@ class TrashViewModel(application: Application) : AndroidViewModel(application) {
                 val uris = publicItems.map { it.uri }
                 when (val res = operationsHelper.requestTrashMedia(uris, trash = false)) {
                     is MediaOperationResult.RequiresConsent -> {
-                        onConsentRequired(res.intentSender)
+                        onRequestConsent(res.intentSender) { granted ->
+                            if (granted) refreshPublicTrash()
+                        }
                     }
                     is MediaOperationResult.Success -> {
                         refreshPublicTrash()
@@ -146,7 +148,7 @@ class TrashViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun permanentlyDeleteSelected(
-        onConsentRequired: (IntentSender) -> Unit,
+        onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
         onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
@@ -164,7 +166,11 @@ class TrashViewModel(application: Application) : AndroidViewModel(application) {
                 val uris = publicItems.map { it.uri }
                 when (val res = operationsHelper.requestDeleteMedia(uris)) {
                     is MediaOperationResult.RequiresConsent -> {
-                        onConsentRequired(res.intentSender)
+                        onRequestConsent(res.intentSender) { granted ->
+                            if (granted) {
+                                refreshPublicTrash()
+                            }
+                        }
                     }
                     is MediaOperationResult.Success -> {
                         refreshPublicTrash()

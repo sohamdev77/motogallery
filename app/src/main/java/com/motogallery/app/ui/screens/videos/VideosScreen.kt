@@ -45,18 +45,38 @@ import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoViolet
 
+import android.content.IntentSender
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import com.motogallery.app.ui.components.ConfirmationDialog
+import com.motogallery.app.util.IntentUtils
+import kotlinx.coroutines.launch
+
 @Composable
 fun VideosScreen(
     viewModel: VideosViewModel,
     onNavigateToVideoPlayer: (Uri) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val wallpaperConfig = LocalWallpaperConfig.current
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showVaultConfirmDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = wallpaperConfig.backgroundColor,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             MotoTopBar(
                 title = "Videos",
@@ -72,11 +92,16 @@ fun VideosScreen(
         bottomBar = {
             SelectionActionBar(
                 visible = uiState.isSelectionMode,
-                onShare = {},
-                onToggleFavorite = {},
+                onShare = {
+                    val selected = uiState.selectedItems
+                    if (selected.isNotEmpty()) {
+                        IntentUtils.shareMultipleMedia(context, selected)
+                    }
+                },
+                onToggleFavorite = { viewModel.toggleFavoriteSelected() },
                 onAddToAlbum = {},
-                onMoveToVault = {},
-                onDelete = {}
+                onMoveToVault = { showVaultConfirmDialog = true },
+                onDelete = { showDeleteConfirmDialog = true }
             )
         }
     ) { innerPadding ->
@@ -157,5 +182,46 @@ fun VideosScreen(
                 }
             }
         }
+    }
+
+    if (showDeleteConfirmDialog) {
+        ConfirmationDialog(
+            title = "Delete Selected Videos",
+            message = "Move ${uiState.selectedIds.size} video(s) to trash? Media can be restored within 30 days.",
+            confirmText = "Delete",
+            isDestructive = true,
+            onConfirm = {
+                viewModel.requestDeleteSelected(
+                    onRequestConsent = onRequestConsent,
+                    onComplete = {
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Videos moved to trash")
+                        }
+                    }
+                )
+            },
+            onDismiss = { showDeleteConfirmDialog = false }
+        )
+    }
+
+    if (showVaultConfirmDialog) {
+        ConfirmationDialog(
+            title = "Move to Private Vault",
+            message = "Selected videos will be encrypted with AES-256-GCM and stored in your private vault. The public copies will be deleted so they are only visible in your vault.",
+            confirmText = "Move to Vault",
+            isDestructive = false,
+            onConfirm = {
+                viewModel.moveToVault(
+                    items = uiState.selectedItems,
+                    onRequestConsent = onRequestConsent,
+                    onSuccess = { count ->
+                        scope.launch {
+                            snackbarHostState.showSnackbar("Secured $count video(s) in vault; deleting public copies...")
+                        }
+                    }
+                )
+            },
+            onDismiss = { showVaultConfirmDialog = false }
+        )
     }
 }

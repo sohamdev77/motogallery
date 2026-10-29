@@ -5,10 +5,12 @@ import android.graphics.BitmapFactory
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,15 +37,22 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,8 +71,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.motogallery.app.data.model.MediaItem
 import com.motogallery.app.data.model.VaultItem
 import com.motogallery.app.ui.components.ConfirmationDialog
+import com.motogallery.app.ui.components.MediaThumbnailCard
 import com.motogallery.app.ui.components.SelectionActionBar
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
@@ -78,11 +89,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VaultScreen(
     viewModel: VaultViewModel,
     onNavigateToVaultViewer: (Long) -> Unit,
-    onRequestConsent: (IntentSender) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -92,6 +104,10 @@ fun VaultScreen(
 
     var showTrashConfirmDialog by remember { mutableStateOf(false) }
     var showRestoreConfirmDialog by remember { mutableStateOf(false) }
+    var showAddMediaSheet by remember { mutableStateOf(false) }
+    var availableMedia by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
+    var selectedMediaToImport by remember { mutableStateOf<Set<Long>>(emptySet()) }
+    val addSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     // Visual media picker to select photos & videos to import into vault
     val mediaPickerLauncher = rememberLauncherForActivityResult(
@@ -107,7 +123,7 @@ fun VaultScreen(
                     mimeType = mime,
                     isVideo = isVideo,
                     size = 0L,
-                    onConsentToDeleteOriginal = onRequestConsent
+                    onRequestConsent = onRequestConsent
                 )
             }
         }
@@ -180,15 +196,20 @@ fun VaultScreen(
             if (!uiState.isSelectionMode) {
                 FloatingActionButton(
                     onClick = {
-                        mediaPickerLauncher.launch(
-                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
-                        )
+                        scope.launch(Dispatchers.IO) {
+                            val items = viewModel.queryAvailablePublicMedia()
+                            withContext(Dispatchers.Main) {
+                                availableMedia = items
+                                selectedMediaToImport = emptySet()
+                                showAddMediaSheet = true
+                            }
+                        }
                     },
                     containerColor = MotoViolet,
                     contentColor = Color.White,
                     shape = CircleShape
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Import Media")
+                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Media to Vault")
                 }
             }
         },
@@ -274,6 +295,28 @@ fun VaultScreen(
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         modifier = Modifier.padding(top = 4.dp, start = 16.dp, end = 16.dp)
                     )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Button(
+                        onClick = {
+                            scope.launch(Dispatchers.IO) {
+                                val items = viewModel.queryAvailablePublicMedia()
+                                withContext(Dispatchers.Main) {
+                                    availableMedia = items
+                                    selectedMediaToImport = emptySet()
+                                    showAddMediaSheet = true
+                                }
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MotoViolet,
+                            contentColor = Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text("Add Photos & Videos")
+                    }
                 }
             }
         } else {
@@ -336,8 +379,139 @@ fun VaultScreen(
             onDismiss = { showTrashConfirmDialog = false }
         )
     }
+
+    if (showAddMediaSheet) {
+        ModalBottomSheet(
+            onDismissRequest = { showAddMediaSheet = false },
+            sheetState = addSheetState,
+            containerColor = MotoSurface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = "Add to Private Vault",
+                            color = MotoTextPrimary,
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "Selected items will be encrypted and deleted from public gallery",
+                            color = MotoTextSecondary,
+                            fontSize = 12.sp
+                        )
+                    }
+                    IconButton(onClick = { showAddMediaSheet = false }) {
+                        Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = MotoTextSecondary)
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (availableMedia.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(text = "No public photos or videos found on device", color = MotoTextSecondary)
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        contentPadding = PaddingValues(bottom = 12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f, fill = false)
+                            .height(360.dp)
+                    ) {
+                        items(availableMedia, key = { it.id }) { item ->
+                            val isSelected = item.id in selectedMediaToImport
+                            MediaThumbnailCard(
+                                item = item,
+                                isSelected = isSelected,
+                                isSelectionMode = true,
+                                onClick = {
+                                    selectedMediaToImport = if (isSelected) {
+                                        selectedMediaToImport - item.id
+                                    } else {
+                                        selectedMediaToImport + item.id
+                                    }
+                                },
+                                onLongClick = {}
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = {
+                            showAddMediaSheet = false
+                            mediaPickerLauncher.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                            )
+                        },
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("External Files", fontSize = 12.sp)
+                    }
+
+                    Button(
+                        onClick = {
+                            val itemsToImport = availableMedia.filter { it.id in selectedMediaToImport }
+                            if (itemsToImport.isNotEmpty()) {
+                                viewModel.importMediaItems(
+                                    items = itemsToImport,
+                                    onRequestConsent = onRequestConsent,
+                                    onSuccess = { count ->
+                                        showAddMediaSheet = false
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Secured $count item(s) in vault; deleting public copies...")
+                                        }
+                                    }
+                                )
+                            }
+                        },
+                        enabled = selectedMediaToImport.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MotoViolet,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.weight(1.5f)
+                    ) {
+                        Icon(imageVector = Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text(
+                            text = if (selectedMediaToImport.isEmpty()) "Select Items" else "Secure in Vault (${selectedMediaToImport.size})",
+                            fontSize = 12.sp
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun VaultThumbnailCard(
     item: VaultItem,
@@ -367,7 +541,10 @@ fun VaultThumbnailCard(
             .aspectRatio(1f)
             .clip(RoundedCornerShape(6.dp))
             .background(MotoSurfaceVariant)
-            .clickable(onClick = onClick),
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            ),
         contentAlignment = Alignment.Center
     ) {
         if (thumbBitmap != null) {

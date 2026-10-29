@@ -45,6 +45,13 @@ import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoViolet
 import com.motogallery.app.util.IntentUtils
 
+import androidx.compose.runtime.rememberCoroutineScope
+import com.motogallery.app.MotoGalleryApp
+import com.motogallery.app.data.mediastore.MediaOperationResult
+import com.motogallery.app.data.mediastore.MediaOperationsHelper
+import kotlinx.coroutines.launch
+import java.io.File
+
 @Composable
 fun AlbumDetailScreen(
     albumId: String,
@@ -52,14 +59,19 @@ fun AlbumDetailScreen(
     viewModel: AlbumsViewModel,
     onNavigateBack: () -> Unit,
     onNavigateToViewer: (Long) -> Unit,
-    onRequestConsent: (IntentSender) -> Unit,
+    onRequestConsent: (IntentSender, ((Boolean) -> Unit)?) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val app = context.applicationContext as MotoGalleryApp
+    val operationsHelper = remember { MediaOperationsHelper(app) }
+    val scope = rememberCoroutineScope()
+
     var items by remember { mutableStateOf<List<MediaItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var selectedIds by remember { mutableStateOf<Set<Long>>(emptySet()) }
     var showDeleteConfirmDialog by remember { mutableStateOf(false) }
+    var showVaultConfirmDialog by remember { mutableStateOf(false) }
 
     val isSelectionMode = selectedIds.isNotEmpty()
 
@@ -122,7 +134,7 @@ fun AlbumDetailScreen(
                     selectedIds = emptySet()
                 },
                 onAddToAlbum = {},
-                onMoveToVault = {},
+                onMoveToVault = { showVaultConfirmDialog = true },
                 onDelete = { showDeleteConfirmDialog = true }
             )
         }
@@ -176,5 +188,96 @@ fun AlbumDetailScreen(
                 }
             }
         }
+    }
+
+    if (showDeleteConfirmDialog) {
+        val selectedItems = items.filter { it.id in selectedIds }
+        ConfirmationDialog(
+            title = "Delete Selected Media",
+            message = "Move ${selectedIds.size} item(s) to trash? Media can be restored within 30 days.",
+            confirmText = "Delete",
+            isDestructive = true,
+            onConfirm = {
+                scope.launch {
+                    val uris = selectedItems.map { it.uri }
+                    when (val res = operationsHelper.requestTrashMedia(uris, trash = true)) {
+                        is MediaOperationResult.RequiresConsent -> {
+                            onRequestConsent(res.intentSender) { granted ->
+                                if (granted) {
+                                    items = items.filter { it.id !in selectedIds }
+                                    selectedIds = emptySet()
+                                }
+                            }
+                        }
+                        is MediaOperationResult.Success -> {
+                            items = items.filter { it.id !in selectedIds }
+                            selectedIds = emptySet()
+                        }
+                        else -> {}
+                    }
+                }
+            },
+            onDismiss = { showDeleteConfirmDialog = false }
+        )
+    }
+
+    if (showVaultConfirmDialog) {
+        val selectedItems = items.filter { it.id in selectedIds }
+        ConfirmationDialog(
+            title = "Move to Private Vault",
+            message = "Selected items will be encrypted with AES-256-GCM and stored in your private vault. The public copies will be deleted so they are only visible in your vault.",
+            confirmText = "Move to Vault",
+            isDestructive = false,
+            onConfirm = {
+                scope.launch {
+                    var imported = 0
+                    val urisToDelete = mutableListOf<android.net.Uri>()
+                    val pathsToDelete = mutableListOf<String>()
+
+                    for (item in selectedItems) {
+                        val res = app.vaultManager.importMedia(
+                            sourceUri = item.uri,
+                            originalName = item.displayName,
+                            mimeType = item.mimeType,
+                            isVideo = item.isVideo,
+                            size = item.size,
+                            durationMs = item.durationMs,
+                            width = item.width,
+                            height = item.height
+                        )
+                        if (res.isSuccess) {
+                            imported++
+                            urisToDelete.add(item.uri)
+                            if (item.path.isNotBlank()) pathsToDelete.add(item.path)
+                        }
+                    }
+
+                    if (imported > 0) {
+                        when (val delRes = operationsHelper.requestDeleteMedia(urisToDelete, pathsToDelete)) {
+                            is MediaOperationResult.RequiresConsent -> {
+                                onRequestConsent(delRes.intentSender) { granted ->
+                                    if (granted) {
+                                        pathsToDelete.forEach { File(it).delete() }
+                                        items = items.filter { it.id !in selectedIds }
+                                        selectedIds = emptySet()
+                                    }
+                                }
+                            }
+                            is MediaOperationResult.Success -> {
+                                pathsToDelete.forEach { File(it).delete() }
+                                items = items.filter { it.id !in selectedIds }
+                                selectedIds = emptySet()
+                            }
+                            else -> {
+                                pathsToDelete.forEach { File(it).delete() }
+                                items = items.filter { it.id !in selectedIds }
+                                selectedIds = emptySet()
+                            }
+                        }
+                    }
+                }
+            },
+            onDismiss = { showVaultConfirmDialog = false }
+        )
     }
 }
