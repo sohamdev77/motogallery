@@ -207,11 +207,10 @@ class SwipeCleanViewModel(application: Application) : AndroidViewModel(applicati
         if (trashList.isEmpty()) return
 
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, showTrashConfirmDialog = false)
+            _uiState.value = _uiState.value.copy(showTrashConfirmDialog = false)
             val uris = trashList.map { it.uri }
             when (val result = operationsHelper.requestTrashMedia(uris, trash = true)) {
                 is MediaOperationResult.RequiresConsent -> {
-                    _uiState.value = _uiState.value.copy(isLoading = false)
                     onRequestConsent(result.intentSender) { granted ->
                         onConsentResult(granted)
                     }
@@ -221,7 +220,6 @@ class SwipeCleanViewModel(application: Application) : AndroidViewModel(applicati
                 }
                 is MediaOperationResult.Error -> {
                     _uiState.value = _uiState.value.copy(
-                        isLoading = false,
                         errorMessage = "Could not move to trash: ${result.message}"
                     )
                 }
@@ -242,8 +240,11 @@ class SwipeCleanViewModel(application: Application) : AndroidViewModel(applicati
     private fun onTrashSuccess(trashed: List<MediaItem>) {
         val count = trashed.size
         val sizeFormatted = FileSizeFormatter.format(trashed.sumOf { it.size })
+        val trashedIds = trashed.map { it.id }.toSet()
+        allCategoryItems = allCategoryItems.filterNot { it.id in trashedIds }
         actionHistory.clear()
         _uiState.value = _uiState.value.copy(
+            unreviewedItems = _uiState.value.unreviewedItems.filterNot { it.id in trashedIds },
             reviewedTrashQueue = emptyList(),
             recoverableBytes = 0L,
             canUndo = false,

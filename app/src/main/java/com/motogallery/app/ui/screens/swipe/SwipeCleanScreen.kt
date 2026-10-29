@@ -3,6 +3,7 @@ package com.motogallery.app.ui.screens.swipe
 import android.content.IntentSender
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -66,6 +67,8 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -77,6 +80,7 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -94,6 +98,8 @@ import androidx.media3.common.MediaItem as ExoMediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.CachePolicy
 import coil.request.ImageRequest
 import com.motogallery.app.data.model.MediaItem
 import com.motogallery.app.data.model.SwipeCategory
@@ -118,6 +124,19 @@ import com.motogallery.app.util.FileSizeFormatter
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
+class SwipeCardController {
+    var swipeLeftAction: (() -> Unit)? = null
+    var swipeRightAction: (() -> Unit)? = null
+
+    fun swipeLeft() {
+        swipeLeftAction?.invoke()
+    }
+
+    fun swipeRight() {
+        swipeRightAction?.invoke()
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SwipeCleanScreen(
@@ -130,6 +149,8 @@ fun SwipeCleanScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var showFilterSheet by remember { mutableStateOf(false) }
+    val cardController = remember { SwipeCardController() }
+    var currentSwipeProgress by remember { mutableFloatStateOf(0f) }
 
     LaunchedEffect(uiState.statusMessage) {
         uiState.statusMessage?.let {
@@ -325,42 +346,74 @@ fun SwipeCleanScreen(
                         onResetClick = { viewModel.resetSession() }
                     )
                 } else {
-                    // Interactive Card Stack (renders top 3 items)
                     val items = uiState.unreviewedItems
-                    val topIndex = 0
+                    val topItem = items.first()
 
+                    // Preload upcoming images in Coil cache for instant, zero-delay rendering
+                    val context = LocalContext.current
+                    LaunchedEffect(items) {
+                        items.take(4).forEach { item ->
+                            val req = ImageRequest.Builder(context)
+                                .data(item.uri)
+                                .size(1080)
+                                .memoryCachePolicy(CachePolicy.ENABLED)
+                                .diskCachePolicy(CachePolicy.ENABLED)
+                                .build()
+                            context.imageLoader.enqueue(req)
+                        }
+                    }
+
+                    // 3rd Depth Card
                     if (items.size > 2) {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth(0.88f)
                                 .aspectRatio(0.72f)
-                                .offset(y = 20.dp)
-                                .scale(0.90f),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MotoSurfaceVariant.copy(alpha = 0.5f))
+                                .graphicsLayer {
+                                    val progress = currentSwipeProgress.coerceIn(0f, 1f)
+                                    scaleX = 0.88f + (0.06f * progress)
+                                    scaleY = 0.88f + (0.06f * progress)
+                                    translationY = 22.dp.toPx() * (1f - progress)
+                                    alpha = 0.45f + (0.25f * progress)
+                                },
+                            shape = RoundedCornerShape(22.dp),
+                            colors = CardDefaults.cardColors(containerColor = MotoSurfaceVariant.copy(alpha = 0.6f))
                         ) {}
                     }
 
-                    if (items.size > 1) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth(0.92f)
-                                .aspectRatio(0.72f)
-                                .offset(y = 10.dp)
-                                .scale(0.95f),
-                            shape = RoundedCornerShape(20.dp),
-                            colors = CardDefaults.cardColors(containerColor = MotoSurfaceVariant.copy(alpha = 0.8f))
-                        ) {}
+                    // 2nd Underlying Card (Renders real next photo/video so next image is immediately visible!)
+                    val nextItem = items.getOrNull(1)
+                    if (nextItem != null) {
+                        key(nextItem.id) {
+                            UnderlyingCard(
+                                item = nextItem,
+                                swipeProgress = currentSwipeProgress
+                            )
+                        }
                     }
 
-                    // Top Active Swipable Card
-                    val topItem = items[topIndex]
-                    SwipableCard(
-                        item = topItem,
-                        onSwipeLeft = { viewModel.swipeLeft(topItem) },
-                        onSwipeRight = { viewModel.swipeRight(topItem) },
-                        onSwipeUp = { viewModel.swipeUp(topItem) }
-                    )
+                    // Top Active Swipable Card (Fresh state guaranteed via key)
+                    key(topItem.id) {
+                        SwipableCard(
+                            item = topItem,
+                            controller = cardController,
+                            onSwipeLeft = {
+                                currentSwipeProgress = 0f
+                                viewModel.swipeLeft(topItem)
+                            },
+                            onSwipeRight = {
+                                currentSwipeProgress = 0f
+                                viewModel.swipeRight(topItem)
+                            },
+                            onSwipeUp = {
+                                currentSwipeProgress = 0f
+                                viewModel.swipeUp(topItem)
+                            },
+                            onSwipeProgress = { progress ->
+                                currentSwipeProgress = progress
+                            }
+                        )
+                    }
                 }
             }
 
@@ -401,7 +454,7 @@ fun SwipeCleanScreen(
                     IconButton(
                         onClick = {
                             if (uiState.unreviewedItems.isNotEmpty()) {
-                                viewModel.swipeLeft(uiState.unreviewedItems.first())
+                                cardController.swipeLeft()
                             }
                         },
                         enabled = uiState.unreviewedItems.isNotEmpty(),
@@ -444,7 +497,7 @@ fun SwipeCleanScreen(
                     IconButton(
                         onClick = {
                             if (uiState.unreviewedItems.isNotEmpty()) {
-                                viewModel.swipeRight(uiState.unreviewedItems.first())
+                                cardController.swipeRight()
                             }
                         },
                         enabled = uiState.unreviewedItems.isNotEmpty(),
@@ -564,59 +617,121 @@ fun SwipeCleanScreen(
 @Composable
 private fun SwipableCard(
     item: MediaItem,
+    controller: SwipeCardController? = null,
     onSwipeLeft: () -> Unit,
     onSwipeRight: () -> Unit,
-    onSwipeUp: () -> Unit
+    onSwipeUp: () -> Unit,
+    onSwipeProgress: (Float) -> Unit
 ) {
     val context = LocalContext.current
     val density = LocalDensity.current
     val scope = rememberCoroutineScope()
 
-    val offsetX = remember { Animatable(0f) }
-    val offsetY = remember { Animatable(0f) }
-    var isPlayingVideo by remember { mutableStateOf(false) }
+    var dragX by remember(item.id) { mutableFloatStateOf(0f) }
+    var dragY by remember(item.id) { mutableFloatStateOf(0f) }
+    val animX = remember(item.id) { Animatable(0f) }
+    val animY = remember(item.id) { Animatable(0f) }
+    var isDragging by remember(item.id) { mutableStateOf(false) }
+    var isAnimating by remember(item.id) { mutableStateOf(false) }
+    var isPlayingVideo by remember(item.id) { mutableStateOf(false) }
 
-    val rotation = (offsetX.value / 25f).coerceIn(-22f, 22f)
-    val swipeThresholdPx = with(density) { 130.dp.toPx() }
-    val upThresholdPx = with(density) { -140.dp.toPx() }
+    val swipeThresholdPx = with(density) { 120.dp.toPx() }
+    val upThresholdPx = with(density) { -130.dp.toPx() }
+
+    val currentX = if (isAnimating) animX.value else dragX
+    val currentY = if (isAnimating) animY.value else dragY
+    val rotation = (currentX / 22f).coerceIn(-24f, 24f)
+
+    // Programmatic triggers from bottom action buttons
+    controller?.let { ctrl ->
+        ctrl.swipeLeftAction = {
+            if (!isAnimating && !isDragging) {
+                isAnimating = true
+                scope.launch {
+                    animX.snapTo(0f)
+                    animY.snapTo(0f)
+                    animX.animateTo(-1600f, tween(200, easing = FastOutLinearInEasing))
+                    onSwipeLeft()
+                }
+            }
+        }
+        ctrl.swipeRightAction = {
+            if (!isAnimating && !isDragging) {
+                isAnimating = true
+                scope.launch {
+                    animX.snapTo(0f)
+                    animY.snapTo(0f)
+                    animX.animateTo(1600f, tween(200, easing = FastOutLinearInEasing))
+                    onSwipeRight()
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(0.72f)
-            .offset { IntOffset(offsetX.value.roundToInt(), offsetY.value.roundToInt()) }
-            .rotate(rotation)
+            .graphicsLayer {
+                translationX = currentX
+                translationY = currentY
+                rotationZ = rotation
+            }
             .pointerInput(item.id) {
                 detectDragGestures(
+                    onDragStart = {
+                        if (!isAnimating) {
+                            isDragging = true
+                        }
+                    },
                     onDrag = { change, dragAmount ->
-                        change.consume()
+                        if (!isAnimating) {
+                            change.consume()
+                            dragX += dragAmount.x
+                            dragY += dragAmount.y
+                            onSwipeProgress((Math.abs(dragX) / swipeThresholdPx).coerceIn(0f, 1f))
+                        }
+                    },
+                    onDragCancel = {
+                        isDragging = false
                         scope.launch {
-                            offsetX.snapTo(offsetX.value + dragAmount.x)
-                            offsetY.snapTo(offsetY.value + dragAmount.y)
+                            animX.snapTo(dragX)
+                            animY.snapTo(dragY)
+                            isAnimating = true
+                            dragX = 0f
+                            dragY = 0f
+                            launch { animX.animateTo(0f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)) }
+                            launch { animY.animateTo(0f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)) }
+                            onSwipeProgress(0f)
+                            isAnimating = false
                         }
                     },
                     onDragEnd = {
+                        isDragging = false
                         scope.launch {
+                            animX.snapTo(dragX)
+                            animY.snapTo(dragY)
+                            isAnimating = true
                             when {
-                                offsetX.value < -swipeThresholdPx -> {
-                                    // Fling off left (Trash)
-                                    offsetX.animateTo(-1200f, tween(200))
+                                dragX < -swipeThresholdPx -> {
+                                    animX.animateTo(-1600f, tween(180, easing = FastOutLinearInEasing))
                                     onSwipeLeft()
                                 }
-                                offsetX.value > swipeThresholdPx -> {
-                                    // Fling off right (Keep)
-                                    offsetX.animateTo(1200f, tween(200))
+                                dragX > swipeThresholdPx -> {
+                                    animX.animateTo(1600f, tween(180, easing = FastOutLinearInEasing))
                                     onSwipeRight()
                                 }
-                                offsetY.value < upThresholdPx -> {
-                                    // Swipe up (Preview)
-                                    offsetY.animateTo(-1200f, tween(200))
+                                dragY < upThresholdPx -> {
+                                    animY.animateTo(-1600f, tween(180, easing = FastOutLinearInEasing))
                                     onSwipeUp()
                                 }
                                 else -> {
-                                    // Snap back with spring physics
-                                    launch { offsetX.animateTo(0f, spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow)) }
-                                    launch { offsetY.animateTo(0f, spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessLow)) }
+                                    dragX = 0f
+                                    dragY = 0f
+                                    launch { animX.animateTo(0f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)) }
+                                    launch { animY.animateTo(0f, spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow)) }
+                                    onSwipeProgress(0f)
+                                    isAnimating = false
                                 }
                             }
                         }
@@ -647,6 +762,8 @@ private fun SwipableCard(
                             .data(item.uri)
                             .crossfade(true)
                             .size(1080)
+                            .memoryCachePolicy(CachePolicy.ENABLED)
+                            .diskCachePolicy(CachePolicy.ENABLED)
                             .build(),
                         contentDescription = item.displayName,
                         contentScale = ContentScale.Crop,
@@ -715,10 +832,10 @@ private fun SwipableCard(
                 }
 
                 // Dynamic Swipe Badges Overlay
-                val badgeAlpha = (Math.abs(offsetX.value) / swipeThresholdPx).coerceIn(0f, 1f)
-                val upBadgeAlpha = (Math.abs(offsetY.value) / Math.abs(upThresholdPx)).coerceIn(0f, 1f)
+                val badgeAlpha = (Math.abs(currentX) / swipeThresholdPx).coerceIn(0f, 1f)
+                val upBadgeAlpha = (Math.abs(currentY) / Math.abs(upThresholdPx)).coerceIn(0f, 1f)
 
-                if (offsetX.value > 20f) {
+                if (currentX > 20f) {
                     // KEEP Badge (Green)
                     Box(
                         modifier = Modifier
@@ -737,7 +854,7 @@ private fun SwipableCard(
                             letterSpacing = 2.sp
                         )
                     }
-                } else if (offsetX.value < -20f) {
+                } else if (currentX < -20f) {
                     // TRASH Badge (Red)
                     Box(
                         modifier = Modifier
@@ -756,7 +873,7 @@ private fun SwipableCard(
                             letterSpacing = 2.sp
                         )
                     }
-                } else if (offsetY.value < -20f) {
+                } else if (currentY < -20f) {
                     // PREVIEW Badge (Cyan/Violet)
                     Box(
                         modifier = Modifier
@@ -773,6 +890,112 @@ private fun SwipableCard(
                             color = MotoViolet.copy(alpha = upBadgeAlpha),
                             letterSpacing = 2.sp
                         )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun UnderlyingCard(
+    item: MediaItem,
+    swipeProgress: Float,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val progress = swipeProgress.coerceIn(0f, 1f)
+    val scale = 0.94f + (0.06f * progress)
+    val offsetY = 12.dp * (1f - progress)
+    val alpha = 0.82f + (0.18f * progress)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(0.72f)
+            .graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+                translationY = offsetY.toPx()
+                this.alpha = alpha
+            }
+    ) {
+        Card(
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = MotoSurface),
+            border = androidx.compose.foundation.BorderStroke(1.dp, MotoBorder),
+            modifier = Modifier.fillMaxSize()
+        ) {
+            Box(modifier = Modifier.fillMaxSize()) {
+                AsyncImage(
+                    model = ImageRequest.Builder(context)
+                        .data(item.uri)
+                        .crossfade(true)
+                        .size(1080)
+                        .memoryCachePolicy(CachePolicy.ENABLED)
+                        .diskCachePolicy(CachePolicy.ENABLED)
+                        .build(),
+                    contentDescription = item.displayName,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                if (item.isVideo) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(56.dp)
+                            .clip(CircleShape)
+                            .background(Color.Black.copy(alpha = 0.6f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Play Video",
+                            tint = Color.White,
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+
+                // Bottom Metadata Gradient Scrim
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))
+                            )
+                        )
+                        .padding(16.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = item.displayName,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = DateFormatter.formatDate(item.bestTimestamp),
+                                fontSize = 12.sp,
+                                color = MotoTextSecondary
+                            )
+                            Text(
+                                text = FileSizeFormatter.format(item.size),
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MotoOrange
+                            )
+                        }
                     }
                 }
             }
