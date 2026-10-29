@@ -37,6 +37,11 @@ import com.motogallery.app.ui.screens.videos.VideosViewModel
 import com.motogallery.app.ui.screens.viewer.MediaViewerScreen
 import com.motogallery.app.ui.screens.viewer.MediaViewerViewModel
 import com.motogallery.app.ui.screens.viewer.VideoPlayerScreen
+import com.motogallery.app.ui.screens.swipe.SwipeCleanScreen
+import com.motogallery.app.ui.screens.swipe.SwipeCleanViewModel
+import com.motogallery.app.ui.screens.wallpaper.WallpaperPickerScreen
+import com.motogallery.app.ui.screens.wallpaper.WallpaperPickerViewModel
+import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBackground
 
 @Composable
@@ -49,9 +54,12 @@ fun AppNavGraph(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val wallpaperConfig = LocalWallpaperConfig.current
+
     // Hide bottom navigation bar on fullscreen viewers and editors
     val shouldShowBottomBar = currentRoute in listOf(
         Screen.Photos.route,
+        Screen.SwipeClean.route,
         Screen.Albums.route,
         Screen.Videos.route,
         Screen.Vault.route,
@@ -60,15 +68,17 @@ fun AppNavGraph(
 
     // Shared / scoped view models
     val photosViewModel: PhotosViewModel = viewModel()
+    val swipeCleanViewModel: SwipeCleanViewModel = viewModel()
     val albumsViewModel: AlbumsViewModel = viewModel()
     val videosViewModel: VideosViewModel = viewModel()
     val vaultViewModel: VaultViewModel = viewModel()
     val settingsViewModel: SettingsViewModel = viewModel()
     val trashViewModel: TrashViewModel = viewModel()
+    val wallpaperPickerViewModel: WallpaperPickerViewModel = viewModel()
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MotoBackground,
+        containerColor = wallpaperConfig.backgroundColor,
         bottomBar = {
             if (shouldShowBottomBar) {
                 MotoBottomNavBar(
@@ -98,6 +108,14 @@ fun AppNavGraph(
                     },
                     onRequestConsent = onRequestConsent,
                     onRequestPermissions = onRequestPermissions
+                )
+            }
+
+            // Swipe Clean Screen
+            composable(Screen.SwipeClean.route) {
+                SwipeCleanScreen(
+                    viewModel = swipeCleanViewModel,
+                    onRequestConsent = onRequestConsent
                 )
             }
 
@@ -252,7 +270,18 @@ fun AppNavGraph(
                     viewModel = settingsViewModel,
                     onNavigateToTrash = {
                         navController.navigate(Screen.Trash.route)
+                    },
+                    onNavigateToWallpaperThemes = {
+                        navController.navigate(Screen.WallpaperThemes.route)
                     }
+                )
+            }
+
+            // Wallpaper Themes Screen
+            composable(Screen.WallpaperThemes.route) {
+                WallpaperPickerScreen(
+                    viewModel = wallpaperPickerViewModel,
+                    onNavigateBack = { navController.popBackStack() }
                 )
             }
         }

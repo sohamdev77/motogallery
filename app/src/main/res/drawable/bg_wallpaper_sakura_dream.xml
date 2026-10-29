@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sakura Dream: Romantic pink cherry blossom aesthetic with soft dusky magenta gradients and petals -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+
+    <!-- Twilight Background -->
+    <path
+        android:pathData="M0,0h1080v2400h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="1080"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF1A0C1E" />
+                <item android:offset="0.35" android:color="#FF2D1236" />
+                <item android:offset="0.7" android:color="#FF38153F" />
+                <item android:offset="1.0" android:color="#FF16091F" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Glowing Moonlight Orb -->
+    <path
+        android:pathData="M850,420 m-220,0 a220,220 0 1,0 440,0 a220,220 0 1,0 -440,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="850"
+                android:startY="200"
+                android:endX="850"
+                android:endY="640"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#44FDE047" />
+                <item android:offset="0.6" android:color="#22F472B6" />
+                <item android:offset="1.0" android:color="#00EC4899" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Sakura Mist Wave 1 -->
+    <path
+        android:pathData="M-100,800 C150,600 450,950 800,750 C1050,600 1200,800 1200,1300 C950,1500 600,1200 300,1400 C50,1550 -100,1350 -100,800 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="100"
+                android:startY="600"
+                android:endX="900"
+                android:endY="1400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00831843" />
+                <item android:offset="0.4" android:color="#66EC4899" />
+                <item android:offset="0.8" android:color="#77F472B6" />
+                <item android:offset="1.0" android:color="#00500724" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Sakura Mist Wave 2 -->
+    <path
+        android:pathData="M-50,1450 C250,1300 550,1700 900,1450 C1150,1300 1250,1600 1250,2100 C950,2300 550,2000 200,2200 C-50,2300 -50,1950 -50,1450 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="200"
+                android:startY="1300"
+                android:endX="1000"
+                android:endY="2200"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00BE185D" />
+                <item android:offset="0.5" android:color="#55FB7185" />
+                <item android:offset="0.8" android:color="#44F43F5E" />
+                <item android:offset="1.0" android:color="#004C0519" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Stylized Sakura Floating Petals -->
+    <path
+        android:pathData="M320,620 C340,600 360,620 350,640 C340,660 310,650 320,620 Z"
+        android:fillColor="#CCFBCFE8" />
+    <path
+        android:pathData="M480,950 C500,925 525,945 510,970 C495,995 465,980 480,950 Z"
+        android:fillColor="#BBF472B6" />
+    <path
+        android:pathData="M210,1280 C230,1260 250,1280 240,1300 C230,1320 200,1310 210,1280 Z"
+        android:fillColor="#AAFBCFE8" />
+    <path
+        android:pathData="M780,1120 C805,1095 830,1115 815,1140 C800,1165 765,1150 780,1120 Z"
+        android:fillColor="#CCF472B6" />
+    <path
+        android:pathData="M890,1650 C910,1630 930,1650 920,1670 C910,1690 880,1680 890,1650 Z"
+        android:fillColor="#BBFBCFE8" />
+    <path
+        android:pathData="M410,1880 C435,1855 460,1875 445,1900 C430,1925 395,1910 410,1880 Z"
+        android:fillColor="#AAF472B6" />
+</vector>

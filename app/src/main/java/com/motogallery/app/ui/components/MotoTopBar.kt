@@ -72,10 +72,12 @@ fun MotoTopBar(
     var isSearchActive by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
+    val wallpaperConfig = com.motogallery.app.ui.theme.LocalWallpaperConfig.current
+
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MotoBackground,
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+        color = wallpaperConfig.topBarColor,
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier

@@ -40,6 +40,21 @@ class AppPreferences(context: Context) {
     private val _vaultAutoLockDelay = MutableStateFlow(prefs.getInt(KEY_VAULT_AUTO_LOCK_DELAY, 0)) // 0 = Immediately
     val vaultAutoLockDelay: StateFlow<Int> = _vaultAutoLockDelay.asStateFlow()
 
+    private val _wallpaperId = MutableStateFlow(prefs.getString(KEY_WALLPAPER_ID, "default") ?: "default")
+    val wallpaperId: StateFlow<String> = _wallpaperId.asStateFlow()
+
+    private val _wallpaperDimming = MutableStateFlow(prefs.getFloat(KEY_WALLPAPER_DIMMING, 0.35f))
+    val wallpaperDimming: StateFlow<Float> = _wallpaperDimming.asStateFlow()
+
+    private val _wallpaperBlur = MutableStateFlow(prefs.getFloat(KEY_WALLPAPER_BLUR, 0.20f))
+    val wallpaperBlur: StateFlow<Float> = _wallpaperBlur.asStateFlow()
+
+    private val _accentColor = MutableStateFlow(prefs.getString(KEY_ACCENT_COLOR, "") ?: "")
+    val accentColor: StateFlow<String> = _accentColor.asStateFlow()
+
+    private val _themeMode = MutableStateFlow(prefs.getString(KEY_THEME_MODE, "dark") ?: "dark")
+    val themeMode: StateFlow<String> = _themeMode.asStateFlow()
+
     fun setGridColumns(columns: Int) {
         val clamped = columns.coerceIn(2, 5)
         prefs.edit().putInt(KEY_GRID_COLUMNS, clamped).apply()
@@ -100,6 +115,48 @@ class AppPreferences(context: Context) {
         return prefs.getLong("video_pos_$videoUri", 0L)
     }
 
+    fun setWallpaperId(id: String) {
+        prefs.edit().putString(KEY_WALLPAPER_ID, id).apply()
+        _wallpaperId.value = id
+    }
+
+    fun setWallpaperDimming(dimming: Float) {
+        val clamped = dimming.coerceIn(0.0f, 0.8f)
+        prefs.edit().putFloat(KEY_WALLPAPER_DIMMING, clamped).apply()
+        _wallpaperDimming.value = clamped
+    }
+
+    fun setWallpaperBlur(blur: Float) {
+        val clamped = blur.coerceIn(0.0f, 1.0f)
+        prefs.edit().putFloat(KEY_WALLPAPER_BLUR, clamped).apply()
+        _wallpaperBlur.value = clamped
+    }
+
+    fun setAccentColor(colorHex: String) {
+        prefs.edit().putString(KEY_ACCENT_COLOR, colorHex).apply()
+        _accentColor.value = colorHex
+    }
+
+    fun setThemeMode(mode: String) {
+        prefs.edit().putString(KEY_THEME_MODE, mode).apply()
+        _themeMode.value = mode
+        if (mode == "dark") {
+            setDarkTheme(true)
+        } else if (mode == "light") {
+            setDarkTheme(false)
+        }
+    }
+
+    fun resetAppearanceDefaults() {
+        setWallpaperId("default")
+        setWallpaperDimming(0.35f)
+        setWallpaperBlur(0.20f)
+        setAccentColor("")
+        setThemeMode("dark")
+        setDarkTheme(true)
+        setDynamicColors(false)
+    }
+
     companion object {
         private const val KEY_GRID_COLUMNS = "grid_columns"
         private const val KEY_DARK_THEME = "dark_theme"
@@ -110,5 +167,10 @@ class AppPreferences(context: Context) {
         private const val KEY_VAULT_PASSWORD_SALT = "vault_pwd_salt"
         private const val KEY_VAULT_BIOMETRIC = "vault_biometric"
         private const val KEY_VAULT_AUTO_LOCK_DELAY = "vault_autolock_delay"
+        private const val KEY_WALLPAPER_ID = "wallpaper_id"
+        private const val KEY_WALLPAPER_DIMMING = "wallpaper_dimming"
+        private const val KEY_WALLPAPER_BLUR = "wallpaper_blur"
+        private const val KEY_ACCENT_COLOR = "accent_color_hex"
+        private const val KEY_THEME_MODE = "theme_mode"
     }
 }

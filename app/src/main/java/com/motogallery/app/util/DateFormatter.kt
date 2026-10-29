@@ -22,6 +22,8 @@ object DateFormatter {
         return shortDateFormat.format(Date(timestampMs))
     }
 
+    fun formatDate(timestampMs: Long): String = formatShortDate(timestampMs)
+
     fun formatHeaderDate(timestampMs: Long): String {
         if (timestampMs <= 0L) return "Unknown Date"
         val now = Calendar.getInstance()

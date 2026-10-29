@@ -16,11 +16,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Folder
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.PhotoLibrary
@@ -41,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.motogallery.app.ui.navigation.Screen
+import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
 import com.motogallery.app.ui.theme.MotoPink
@@ -62,6 +65,12 @@ val navTabs = listOf(
         title = "Photos",
         selectedIcon = Icons.Filled.PhotoLibrary,
         unselectedIcon = Icons.Outlined.PhotoLibrary
+    ),
+    NavTabItem(
+        screen = Screen.SwipeClean,
+        title = "Swipe",
+        selectedIcon = Icons.Filled.AutoAwesome,
+        unselectedIcon = Icons.Outlined.AutoAwesome
     ),
     NavTabItem(
         screen = Screen.Albums,
@@ -95,25 +104,27 @@ fun MotoBottomNavBar(
     onNavigate: (Screen) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val wallpaperConfig = LocalWallpaperConfig.current
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MotoSurface,
+        color = wallpaperConfig.bottomBarColor,
         tonalElevation = 8.dp,
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+        border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .navigationBarsPadding()
                 .height(64.dp)
-                .padding(horizontal = 8.dp),
+                .padding(horizontal = 4.dp),
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
+            val primaryColor = MaterialTheme.colorScheme.primary
             navTabs.forEach { tab ->
                 val isSelected = currentRoute == tab.screen.route
                 val iconTint by animateColorAsState(
-                    targetValue = if (isSelected) MotoViolet else MotoTextTertiary,
+                    targetValue = if (isSelected) primaryColor else MotoTextTertiary,
                     animationSpec = tween(250),
                     label = "iconTint"
                 )
@@ -123,7 +134,7 @@ fun MotoBottomNavBar(
                     label = "textTint"
                 )
                 val pillColor by animateColorAsState(
-                    targetValue = if (isSelected) MotoViolet.copy(alpha = 0.15f) else androidx.compose.ui.graphics.Color.Transparent,
+                    targetValue = if (isSelected) primaryColor.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent,
                     animationSpec = tween(250),
                     label = "pillColor"
                 )
@@ -139,7 +150,7 @@ fun MotoBottomNavBar(
                                 onNavigate(tab.screen)
                             }
                         }
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                        .padding(horizontal = 2.dp, vertical = 2.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
@@ -150,20 +161,20 @@ fun MotoBottomNavBar(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(12.dp))
                                 .background(pillColor)
-                                .padding(horizontal = 14.dp, vertical = 3.dp),
+                                .padding(horizontal = 10.dp, vertical = 2.dp),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
                                 contentDescription = tab.title,
                                 tint = iconTint,
-                                modifier = Modifier.size(22.dp)
+                                modifier = Modifier.size(20.dp)
                             )
                         }
                         Text(
                             text = tab.title,
                             color = textTint,
-                            fontSize = 11.sp,
+                            fontSize = 10.5.sp,
                             fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
                             modifier = Modifier.padding(top = 2.dp)
                         )

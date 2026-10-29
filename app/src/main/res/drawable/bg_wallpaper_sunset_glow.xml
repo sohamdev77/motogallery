@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sunset Glow: Radiant golden hour, amber, fiery coral, and dusk violet horizon -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+
+    <!-- Twilight to Dusk Sky -->
+    <path
+        android:pathData="M0,0h1080v2400h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="1080"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF1E0C2B" />
+                <item android:offset="0.3" android:color="#FF381534" />
+                <item android:offset="0.6" android:color="#FF4A192C" />
+                <item android:offset="0.85" android:color="#FF2A0E23" />
+                <item android:offset="1.0" android:color="#FF130716" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Massive Radiant Sun Disk -->
+    <path
+        android:pathData="M540,1100 m-340,0 a340,340 0 1,0 680,0 a340,340 0 1,0 -680,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="540"
+                android:startY="760"
+                android:endX="540"
+                android:endY="1440"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFFDE047" />
+                <item android:offset="0.4" android:color="#FFF97316" />
+                <item android:offset="0.75" android:color="#FFEF4444" />
+                <item android:offset="1.0" android:color="#00A855F7" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Warm Horizon Cloud Bank 1 -->
+    <path
+        android:pathData="M-100,1200 C150,1100 400,1350 750,1180 C980,1080 1200,1250 1200,1650 C950,1850 650,1600 300,1800 C50,1950 -100,1750 -100,1200 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="100"
+                android:startY="1100"
+                android:endX="1000"
+                android:endY="1800"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00C2410C" />
+                <item android:offset="0.5" android:color="#77F97316" />
+                <item android:offset="0.8" android:color="#66FB923C" />
+                <item android:offset="1.0" android:color="#007C2D12" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Lower Dusk Mountain Silhouette -->
+    <path
+        android:pathData="M-50,1700 L280,1520 L580,1680 L880,1460 L1150,1620 L1150,2400 L-50,2400 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="540"
+                android:startY="1460"
+                android:endX="540"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF1A0B22" />
+                <item android:offset="1.0" android:color="#FF0B0510" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

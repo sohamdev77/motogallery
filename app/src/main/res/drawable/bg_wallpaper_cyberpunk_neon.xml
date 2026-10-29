@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cyberpunk Neon: High-tech grid, intense magenta/cyan laser flares, and dark synthwave atmosphere -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+
+    <!-- Deep Cyber Void -->
+    <path
+        android:pathData="M0,0h1080v2400h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="1080"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF080914" />
+                <item android:offset="0.4" android:color="#FF110A26" />
+                <item android:offset="0.75" android:color="#FF1A0B2E" />
+                <item android:offset="1.0" android:color="#FF060917" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Neon Sun / Hex Flare -->
+    <path
+        android:pathData="M540,750 m-260,0 a260,260 0 1,0 520,0 a260,260 0 1,0 -520,0">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="540"
+                android:startY="490"
+                android:endX="540"
+                android:endY="1010"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FFEC4899" />
+                <item android:offset="0.5" android:color="#FFA855F7" />
+                <item android:offset="1.0" android:color="#006366F1" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Cyber Grid Lines (Horizon Perspective) -->
+    <path
+        android:pathData="M-200,1200 L1280,1200 M-200,1350 L1280,1350 M-200,1550 L1280,1550 M-200,1800 L1280,1800 M-200,2100 L1280,2100"
+        android:strokeWidth="1.5"
+        android:strokeColor="#3306B6D4" />
+
+    <path
+        android:pathData="M540,1100 L-100,2400 M540,1100 L150,2400 M540,1100 L380,2400 M540,1100 L540,2400 M540,1100 L700,2400 M540,1100 L930,2400 M540,1100 L1180,2400"
+        android:strokeWidth="1.5"
+        android:strokeColor="#2506B6D4" />
+
+    <!-- Cyan Beam Diagonal -->
+    <path
+        android:pathData="M-100,400 L1200,1600 L1180,1650 L-120,450 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="-100"
+                android:startY="400"
+                android:endX="1200"
+                android:endY="1650"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#0006B6D4" />
+                <item android:offset="0.5" android:color="#8806B6D4" />
+                <item android:offset="1.0" android:color="#003B82F6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Magenta Beam Counter Diagonal -->
+    <path
+        android:pathData="M1180,350 L-120,1550 L-100,1600 L1200,400 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="1180"
+                android:startY="350"
+                android:endX="-120"
+                android:endY="1600"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00F43F5E" />
+                <item android:offset="0.5" android:color="#88EC4899" />
+                <item android:offset="1.0" android:color="#008B5CF6" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

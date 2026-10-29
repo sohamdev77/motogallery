@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Wallpaper
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -43,6 +44,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -75,10 +77,12 @@ import com.motogallery.app.util.FileSizeFormatter
 fun SettingsScreen(
     viewModel: SettingsViewModel,
     onNavigateToTrash: () -> Unit,
+    onNavigateToWallpaperThemes: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val wallpaperConfig = LocalWallpaperConfig.current
 
     var showChangePinDialog by remember { mutableStateOf(false) }
     var showAutoLockMenu by remember { mutableStateOf(false) }
@@ -93,13 +97,13 @@ fun SettingsScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MotoBackground,
+        containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MotoBackground,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+                color = wallpaperConfig.topBarColor,
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
             ) {
                 Row(
                     modifier = Modifier
@@ -178,12 +182,19 @@ fun SettingsScreen(
             )
 
             Surface(
-                color = MotoSurface,
+                color = wallpaperConfig.surfaceColor,
                 shape = RoundedCornerShape(16.dp),
                 border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column {
+                    SettingsClickableRow(
+                        icon = Icons.Default.Wallpaper,
+                        title = "Wallpaper Themes",
+                        subtitle = "Personalize entire app with built-in wallpapers",
+                        onClick = onNavigateToWallpaperThemes
+                    )
+
                     SettingsSwitchRow(
                         icon = Icons.Default.DarkMode,
                         title = "Dark Theme",

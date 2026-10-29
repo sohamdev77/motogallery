@@ -38,5 +38,7 @@ sealed class Screen(val route: String) {
             return "video_editor/${Uri.encode(mediaUri.toString())}"
         }
     }
+    data object SwipeClean : Screen("swipe_clean")
     data object Settings : Screen("settings")
+    data object WallpaperThemes : Screen("wallpaper_themes")
 }

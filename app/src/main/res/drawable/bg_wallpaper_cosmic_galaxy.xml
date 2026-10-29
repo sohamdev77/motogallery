@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Cosmic Galaxy: Spiral nebula swirls, interstellar dust clouds, and constellation starlight -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+
+    <!-- Deep Space Black/Indigo -->
+    <path
+        android:pathData="M0,0h1080v2400h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="1080"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF050510" />
+                <item android:offset="0.3" android:color="#FF0D0B24" />
+                <item android:offset="0.65" android:color="#FF160D33" />
+                <item android:offset="1.0" android:color="#FF050510" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Swirling Nebula Cloud 1 (Violet) -->
+    <path
+        android:pathData="M-50,600 C250,400 650,850 950,650 C1150,500 1200,800 1200,1400 C950,1700 550,1350 200,1650 C-50,1800 -50,1300 -50,600 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="150"
+                android:startY="400"
+                android:endX="1000"
+                android:endY="1600"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#006D28D9" />
+                <item android:offset="0.4" android:color="#668B5CF6" />
+                <item android:offset="0.75" android:color="#77C084FC" />
+                <item android:offset="1.0" android:color="#004C1D95" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Swirling Nebula Cloud 2 (Cyan/Electric Blue) -->
+    <path
+        android:pathData="M-100,1100 C200,900 500,1350 850,1150 C1100,1000 1250,1250 1250,1900 C950,2150 550,1850 150,2100 C-100,2250 -100,1750 -100,1100 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="100"
+                android:startY="900"
+                android:endX="1050"
+                android:endY="2100"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#000284C7" />
+                <item android:offset="0.45" android:color="#6638BDF8" />
+                <item android:offset="0.8" android:color="#55818CF8" />
+                <item android:offset="1.0" android:color="#001E1B4B" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Star Clusters -->
+    <path
+        android:pathData="M180,240 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M320,180 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M620,290 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M850,220 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M940,480 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M150,850 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M420,720 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M780,950 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M290,1420 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M650,1280 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M890,1540 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M180,1880 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M460,2020 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M740,1920 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M920,2180 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0"
+        android:fillColor="#E6FFFFFF" />
+</vector>

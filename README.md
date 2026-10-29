@@ -67,6 +67,46 @@ MotoGallery is a real, native Android gallery application crafted specifically f
 - **Hardware-Accelerated Stream Muxing**: Uses `MediaExtractor` and `MediaMuxer` for zero quality loss, fast exports, and low battery consumption.
 - **Export Progress**: Real-time percentage indicator and cancellation support. Exports new clips to `Movies/MotoGallery/`.
 
+### 7. Swipe Clean (Tinder-Style Cleanup)
+- **Fluid Card Interface**: Review photos and videos one by one with smooth drag animations, spring physics, card rotation tilt, and haptic feedback.
+- **Intuitive Gestures**:
+  - **Swipe Left**: Queue media for trash with red indicator.
+  - **Swipe Right**: Keep media with emerald indicator.
+  - **Swipe Up**: Open instant fullscreen high-res preview.
+  - **Tap Video**: Play / pause inline preview seamlessly with hardware-accelerated Media3 ExoPlayer.
+  - **Undo**: Instantly reverse the previous action and restore the card stack.
+  - **Tappable Controls**: Dedicated Keep, Trash, Preview, and Undo buttons for quick one-handed tapping.
+- **Smart Cleanup Categories**:
+  - **All Photos** & **All Videos**
+  - **Screenshots** (automatically detects screenshot folders)
+  - **Large Files** (files $\ge$ 25 MB)
+  - **Old Media** (photos & videos taken over 6 months ago)
+  - **Downloads** & **Camera Folder**
+- **Advanced Sorting & Size Filters**: Sort by Newest, Oldest, Largest, or Smallest; filter by minimum file size (Any, 5 MB, 10 MB, 25 MB, 50 MB, 100 MB).
+- **Live Storage Dashboard**: Real-time counter of reviewed, kept, and trashed items alongside actual recoverable disk space calculated from MediaStore file sizes (e.g. **1.42 GB potentially recoverable**).
+- **Safe Scoped Storage Deletion**: Queues items during the session; prompts user with an itemized summary before invoking Android system consent dialogs (`MediaStore.createTrashRequest`). No files are ever silently deleted.
+- **Strict Privacy Isolation**: Encrypted Private Vault media is strictly quarantined and never included in the swipe queue.
+
+### 8. Built-in Wallpaper Themes (Whole-App Customization)
+- **Settings → Appearance → Wallpaper Themes**: Choose from a curated gallery of built-in ambient wallpapers.
+- **8 Bundled Offline Themes**:
+  1. **Midnight Aurora**: Deep night sky illuminated by vivid emerald and purple aurora borealis.
+  2. **Sakura Dream**: Serene blush pink and cherry blossom aesthetic.
+  3. **Cyberpunk Neon**: High-contrast futuristic neon violet and electric blue.
+  4. **AMOLED Black**: Minimalist pitch-black backdrop with crisp accents for maximum battery savings.
+  5. **Ocean Depths**: Calming deep abyssal blue and turquoise underwater gradient.
+  6. **Sunset Glow**: Warm twilight radiant orange, coral, and magenta.
+  7. **Cosmic Galaxy**: Deep outer space nebula with celestial star fields.
+  8. **Minimal Frost**: Soft neutral silver gradients and frosted glass aesthetics.
+- **Whole-App Surface Integration**: Wallpaper renders cleanly across Photos, Albums, Videos, Swipe Clean, Recently Deleted, and Settings via frosted, semi-translucent Material 3 cards while preserving typography readability and WCAG accessibility contrast.
+- **Customization Controls**:
+  - **Adjustable Dimming Slider**: Dial in wallpaper dimming from 0% to 80% to balance art vs. readability.
+  - **Theme Modes**: Dark, Light, or Follow System.
+  - **Custom Accent Colors**: Pick between Violet, Cyan, Coral, Emerald, Sunset Gold, or Electric Pink.
+  - **Instant Application**: Changes apply immediately across all screens without reloading or restarting the app.
+  - **Persistent**: Preferences saved locally via Jetpack DataStore.
+  - **Distraction-Free Media**: Fullscreen photo viewer and ExoPlayer video player automatically isolate media against a pure black canvas.
+
 ---
 
 ## Interface Design
@@ -82,8 +122,9 @@ MotoGallery features a custom dark-first design palette inspired by modern Motor
 | **Pink Accent** | `#EC65B5` | Secondary accent & favorite heart badge |
 | **Orange Accent** | `#FFA34D` | Tertiary accent & warning indicators |
 
-- **5-Tab Navigation**: `Photos` | `Albums` | `Videos` | `Private` | `Settings`
+- **6-Tab Navigation**: `Photos` | `Albums` | `Videos` | `Swipe` | `Private` | `Settings`
 - **Dynamic Color Support**: Optional toggle in Settings to adapt colors to Android 12+ wallpaper themes.
+- **Whole-App Built-in Wallpapers**: 8 bundled themes with real-time dimming and frosted glass surfaces.
 - **Optional Clean Light Theme**: For bright outdoor viewing.
 
 ---
@@ -142,7 +183,7 @@ MotoGallery does not use unrestricted direct filesystem access or dangerous `MAN
 
 ### Option A: Download Pre-Built APK from GitHub Releases
 1. Open the repository's **Releases** page on your Motorola phone browser.
-2. Under the latest release, download `MotoGallery-v1.0.0-release.apk` (or `-debug.apk`).
+2. Under the latest release, download `MotoGallery-v1.1.0-debug.apk`.
 3. Open the downloaded `.apk` from your notification shade or Downloads folder.
 4. When prompted by Android ("For your security, your phone is not allowed to install unknown apps from this source"), tap **Settings** and toggle **Allow from this source**.
 5. Tap **Install** and launch **MotoGallery**.
@@ -151,7 +192,7 @@ MotoGallery does not use unrestricted direct filesystem access or dangerous `MAN
 1. Navigate to the **Actions** tab in this repository.
 2. Click on the latest workflow run on `main`.
 3. Scroll down to the **Artifacts** section and download `MotoGallery-Debug-APK.zip`.
-4. Extract the zip file and transfer `MotoGallery-v1.0.0-debug.apk` to your phone via USB or Google Drive / Files.
+4. Extract the zip file and transfer `MotoGallery-v1.1.0-debug.apk` to your phone via USB or Google Drive / Files.
 
 ---
 
@@ -175,7 +216,7 @@ cd MotoGallery
 ./gradlew assembleDebug
 
 # Output APK location:
-# app/build/outputs/apk/debug/MotoGallery-v1.0.0-debug.apk
+# app/build/outputs/apk/debug/MotoGallery-v1.1.0-debug.apk
 ```
 
 ---
@@ -192,9 +233,51 @@ The following manual test checklist is verified on Motorola devices (Moto G seri
 - [x] **Partial Media Access (Android 14)**: Granting only selected photos displays the permission banner with working "Manage" button.
 - [x] **Public Original Deletion Consent**: Importing media to vault proposes deletion of the public original via system consent dialog without deleting files silently.
 - [x] **Non-Destructive Editing**: Exporting an edited photo or trimmed video generates a new file in `Pictures/MotoGallery` or `Movies/MotoGallery` without altering the original.
+- [x] **Swipe Clean Gestures**: Card dragging tilts with spring physics; left-swipe queues for trash with red badge, right-swipe keeps with emerald badge, up-swipe triggers fullscreen preview.
+- [x] **Swipe Clean Inline Video**: Tapping cards with video files toggles smooth ExoPlayer preview playback inline without UI lag.
+- [x] **Swipe Clean Live Dashboard**: Accurately aggregates items reviewed, kept, trashed, and total recoverable storage calculated from raw byte sizes.
+- [x] **Swipe Clean Scoped Storage Confirmation**: Prompts with confirmation dialog and system consent (`createTrashRequest`) upon completing or finishing a session.
+- [x] **Wallpaper Themes Customization**: Selecting any of the 8 bundled themes updates background immediately across all main tabs and settings screens with translucent frosted surfaces.
+- [x] **Wallpaper Dimming & Modes**: Dimming slider adjusts scrim dynamically (0–80%); dark/light/system modes and custom accent colors persist across app process kills via DataStore.
+
+---
+
+## Changelog
+
+### v1.1.0 — Swipe Clean + Wallpaper Themes Update (Current)
+- **Swipe Clean Experience**:
+  - Tinder-style interactive card interface with spring physics, rotation tilt, and haptic feedback.
+  - Dedicated "Swipe" navigation tab in bottom bar.
+  - 7 Smart Cleanup Categories: All Photos, All Videos, Screenshots, Large Files (>25 MB), Old Media (>6 Months), Downloads, Camera Folder.
+  - Granular sorting (Newest, Oldest, Largest, Smallest) and minimum file-size filters (Any, 5 MB, 10 MB, 25 MB, 50 MB, 100 MB).
+  - Inline video playback on card preview via ExoPlayer.
+  - Tappable Keep, Trash, Preview, and Undo action buttons.
+  - Live storage dashboard computing actual MediaStore recoverable disk space.
+  - Safe Scoped Storage deletion flow with itemized confirmation dialog and system `createTrashRequest`.
+  - Absolute privacy isolation: Encrypted vault files are completely excluded from swipe queues.
+- **Built-in Wallpaper Themes Engine**:
+  - Settings → Appearance → Wallpaper Themes gallery.
+  - 8 bundled offline vector/gradient wallpapers: Midnight Aurora, Sakura Dream, Cyberpunk Neon, AMOLED Black, Ocean Depths, Sunset Glow, Cosmic Galaxy, Minimal Frost.
+  - Whole-app wallpaper integration: root Jetpack Compose backdrop layer with frosted, translucent surface components across gallery, albums, videos, swipe, trash, and settings.
+  - Customization controls: live dimming slider (0% to 80%), Dark/Light/System theme modes, custom accent palettes, and one-tap default reset.
+  - Persistent settings stored via Jetpack DataStore.
+  - Distraction-free media viewer: Fullscreen image viewer and ExoPlayer video player remain pure black.
+- **Testing & Quality**:
+  - Added unit test suites `SwipeCleanTest` (categories, filtering, queues, recoverable bytes, undo, reset) and `WallpaperThemeTest` (theme resolution, dimming clamping, persistence).
+  - 100% test pass rate across all test suites.
+
+### v1.0.0 — Initial Release
+- Native Android gallery app with MediaStore auto-discovery and chronological timeline grid.
+- Dedicated Videos feed with hardware-accelerated Media3 ExoPlayer and intuitive gesture controls (brightness, volume, 10s seek, PiP).
+- Encrypted Private Vault powered by hardware-backed AES-256-GCM Keystore cryptography, RAM-only decryption, biometric authentication, and background auto-lock.
+- Dual-mode Recently Deleted trash (30-day MediaStore trash + app-managed encrypted vault trash with shredding).
+- Built-in non-destructive Photo Editor (rotate, crop, color adjustments, ColorMatrix filters) and Video Editor (timeline trimming, audio muting, fast muxing).
+- Obsidian Dark theme optimized for Motorola OLED displays.
+- 100% offline, zero network permissions, and zero tracking.
 
 ---
 
 ## License
 
 MotoGallery is distributed under the [MIT License](LICENSE).
+

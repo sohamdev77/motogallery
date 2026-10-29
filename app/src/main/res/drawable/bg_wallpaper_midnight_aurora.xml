@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Midnight Aurora: Deep indigo, midnight navy, and glowing violet/emerald aurora gradients -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+
+    <!-- Base Night Sky -->
+    <path
+        android:pathData="M0,0h1080v2400h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="1080"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF070A14" />
+                <item android:offset="0.4" android:color="#FF0D1326" />
+                <item android:offset="0.7" android:color="#FF151538" />
+                <item android:offset="1.0" android:color="#FF090D1A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Aurora Wave 1: Ethereal Teal / Emerald -->
+    <path
+        android:pathData="M-100,500 C200,300 500,700 800,400 C1000,200 1200,450 1200,900 C1000,1100 600,800 300,1050 C50,1200 -100,1000 -100,500 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="100"
+                android:startY="300"
+                android:endX="900"
+                android:endY="1000"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00064E3B" />
+                <item android:offset="0.3" android:color="#6610B981" />
+                <item android:offset="0.7" android:color="#8806B6D4" />
+                <item android:offset="1.0" android:color="#00083344" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Aurora Wave 2: Cosmic Violet / Purple -->
+    <path
+        android:pathData="M-50,900 C250,750 550,1150 850,850 C1100,650 1250,900 1250,1400 C950,1650 550,1350 250,1550 C-50,1700 -50,1400 -50,900 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="200"
+                android:startY="750"
+                android:endX="1000"
+                android:endY="1500"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#004C1D95" />
+                <item android:offset="0.4" android:color="#778B5CF6" />
+                <item android:offset="0.7" android:color="#88A855F7" />
+                <item android:offset="1.0" android:color="#002E1065" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Aurora Wave 3: Lower Horizon Glow -->
+    <path
+        android:pathData="M-50,1500 C300,1400 650,1750 1000,1500 C1150,1400 1200,1650 1200,2100 C900,2300 500,2100 200,2250 C-50,2350 -50,1950 -50,1500 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="100"
+                android:startY="1400"
+                android:endX="1000"
+                android:endY="2200"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00164E63" />
+                <item android:offset="0.5" android:color="#5506B6D4" />
+                <item android:offset="0.8" android:color="#446366F1" />
+                <item android:offset="1.0" android:color="#000F172A" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Star Highlights -->
+    <path
+        android:pathData="M240,220 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M780,180 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M520,380 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M150,750 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M920,680 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M340,1320 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M850,1850 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M180,2100 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#BBFFFFFF" />
+</vector>

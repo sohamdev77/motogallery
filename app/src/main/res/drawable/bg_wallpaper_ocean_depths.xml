@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ocean Depths: Deep abyss indigo, sunken cyan waves, and glowing aquatic caustics -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+
+    <!-- Mariana Trench Dark Indigo Gradient -->
+    <path
+        android:pathData="M0,0h1080v2400h-1080z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="1080"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#FF041E34" />
+                <item android:offset="0.35" android:color="#FF032B44" />
+                <item android:offset="0.75" android:color="#FF021728" />
+                <item android:offset="1.0" android:color="#FF010A14" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Deep Water Caustic Wave 1 -->
+    <path
+        android:pathData="M-100,450 C200,300 450,600 750,400 C950,250 1200,500 1200,950 C950,1150 650,850 350,1100 C100,1250 -100,1050 -100,450 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="100"
+                android:startY="300"
+                android:endX="1000"
+                android:endY="1100"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#000E7490" />
+                <item android:offset="0.4" android:color="#5506B6D4" />
+                <item android:offset="0.8" android:color="#6638BDF8" />
+                <item android:offset="1.0" android:color="#00083344" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bioluminescent Glow Current -->
+    <path
+        android:pathData="M-50,1150 C250,950 600,1400 900,1150 C1100,1000 1250,1250 1250,1800 C950,2050 550,1750 200,1950 C-50,2100 -50,1700 -50,1150 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="200"
+                android:startY="950"
+                android:endX="1000"
+                android:endY="1950"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#00155E75" />
+                <item android:offset="0.5" android:color="#552DD4BF" />
+                <item android:offset="0.8" android:color="#440EA5E9" />
+                <item android:offset="1.0" android:color="#00082F49" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Underwater Particles / Plankton Sparks -->
+    <path
+        android:pathData="M310,340 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M690,520 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M480,890 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0 M180,1350 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M820,1420 a2.5,2.5 0 1,0 5,0 a2.5,2.5 0 1,0 -5,0 M360,1780 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0 M740,2050 a3,3 0 1,0 6,0 a3,3 0 1,0 -6,0"
+        android:fillColor="#88E0F2FE" />
+</vector>

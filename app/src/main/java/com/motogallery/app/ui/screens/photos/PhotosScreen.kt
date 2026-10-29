@@ -50,6 +50,7 @@ import com.motogallery.app.ui.components.MediaThumbnailCard
 import com.motogallery.app.ui.components.MotoTopBar
 import com.motogallery.app.ui.components.PermissionBanner
 import com.motogallery.app.ui.components.SelectionActionBar
+import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
 import com.motogallery.app.ui.theme.MotoSurfaceVariant
@@ -94,9 +95,11 @@ fun PhotosScreen(
         }
     }
 
+    val wallpaperConfig = LocalWallpaperConfig.current
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MotoBackground,
+        containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             MotoTopBar(

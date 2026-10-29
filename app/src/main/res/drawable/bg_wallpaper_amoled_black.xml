@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- AMOLED Black: Pure 100% black with subtle, high-contrast dark geometric angles and obsidian contours -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="1080dp"
+    android:height="2400dp"
+    android:viewportWidth="1080"
+    android:viewportHeight="2400">
+
+    <!-- True AMOLED Pure Black Base -->
+    <path
+        android:pathData="M0,0h1080v2400h-1080z"
+        android:fillColor="#FF000000" />
+
+    <!-- Subtle Slate Geometric Shards -->
+    <path
+        android:pathData="M0,0 L700,0 L350,900 L0,550 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="0"
+                android:endX="700"
+                android:endY="900"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#201E293B" />
+                <item android:offset="1.0" android:color="#00020617" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:pathData="M1080,400 L450,1350 L750,1950 L1080,1800 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="1080"
+                android:startY="400"
+                android:endX="450"
+                android:endY="1950"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#18334155" />
+                <item android:offset="1.0" android:color="#00020617" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <path
+        android:pathData="M0,1600 L650,2400 L0,2400 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:startX="0"
+                android:startY="1600"
+                android:endX="650"
+                android:endY="2400"
+                android:type="linear">
+                <item android:offset="0.0" android:color="#1E1E293B" />
+                <item android:offset="1.0" android:color="#00000000" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Ultra-subtle Precision Accent Lines -->
+    <path
+        android:pathData="M0,550 L350,900 L700,0 M450,1350 L750,1950 M0,1600 L650,2400"
+        android:strokeWidth="1"
+        android:strokeColor="#2264748B" />
+</vector>

@@ -53,6 +53,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.motogallery.app.data.model.Album
 import com.motogallery.app.ui.components.InputTextDialog
+import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
 import com.motogallery.app.ui.theme.MotoPink
@@ -70,16 +71,17 @@ fun AlbumsScreen(
     modifier: Modifier = Modifier
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val wallpaperConfig = LocalWallpaperConfig.current
     var showCreateAlbumDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MotoBackground,
+        containerColor = wallpaperConfig.backgroundColor,
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MotoBackground,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+                color = wallpaperConfig.topBarColor,
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
             ) {
                 Row(
                     modifier = Modifier

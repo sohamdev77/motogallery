@@ -62,6 +62,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.motogallery.app.data.model.TrashedMediaItem
 import com.motogallery.app.ui.components.ConfirmationDialog
+import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
 import com.motogallery.app.ui.theme.MotoError
@@ -83,6 +84,7 @@ fun TrashScreen(
     val uiState by viewModel.uiState.collectAsState()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
+    val wallpaperConfig = LocalWallpaperConfig.current
 
     var showPermanentDeleteDialog by remember { mutableStateOf(false) }
     var showRestoreDialog by remember { mutableStateOf(false) }
@@ -103,13 +105,13 @@ fun TrashScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = MotoBackground,
+        containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
                 modifier = Modifier.fillMaxWidth(),
-                color = MotoBackground,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+                color = wallpaperConfig.topBarColor,
+                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
             ) {
                 Row(
                     modifier = Modifier
