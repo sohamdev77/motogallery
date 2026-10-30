@@ -2,6 +2,9 @@ package com.motogallery.app.ui.screens.albums
 
 import android.content.IntentSender
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +12,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -43,6 +48,11 @@ import com.motogallery.app.ui.theme.MotoBorder
 import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.MotoGlassBorderBrush
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.MotoGlassSurface
+import com.motogallery.app.ui.theme.applePressable
 import com.motogallery.app.util.IntentUtils
 
 import androidx.compose.runtime.rememberCoroutineScope
@@ -85,32 +95,54 @@ fun AlbumDetailScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = MotoBackground,
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MotoBackground,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MotoGlassDark)
+                    .border(
+                        width = 0.5.dp,
+                        brush = MotoGlassBorderBrush,
+                        shape = androidx.compose.ui.graphics.RectangleShape
+                    )
             ) {
+                // Specular top highlight
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(MotoGlassSheenBrush)
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 8.dp, vertical = 10.dp),
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onNavigateBack) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(MotoGlassSurface)
+                            .border(0.5.dp, MotoGlassBorderBrush, CircleShape)
+                            .applePressable(pressScale = 0.88f, onClick = onNavigateBack),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = MotoTextPrimary
+                            tint = MotoTextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
-                    Column(modifier = Modifier.padding(start = 4.dp)) {
+                    Column(modifier = Modifier.padding(start = 12.dp)) {
                         Text(
                             text = if (isSelectionMode) "${selectedIds.size} selected" else albumName,
                             color = MotoTextPrimary,
                             fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = (-0.015).sp
                         )
                         if (!isSelectionMode) {
                             Text(
@@ -160,9 +192,9 @@ fun AlbumDetailScreen(
         } else {
             LazyVerticalGrid(
                 columns = GridCells.Fixed(3),
-                contentPadding = PaddingValues(2.dp),
-                horizontalArrangement = Arrangement.spacedBy(2.dp),
-                verticalArrangement = Arrangement.spacedBy(2.dp),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)

@@ -1,6 +1,9 @@
 package com.motogallery.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,36 +12,38 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBorder
 import com.motogallery.app.ui.theme.MotoError
-import com.motogallery.app.ui.theme.MotoSurface
-import com.motogallery.app.ui.theme.MotoSurfaceVariant
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
 import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoTextTertiary
 import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.applePressable
 
+/**
+ * Apple-Style Glassmorphic Confirmation Dialog
+ * Features frosted obsidian surface, light-catching top border, and tactile spring buttons.
+ */
 @Composable
 fun ConfirmationDialog(
     title: String,
@@ -49,45 +54,98 @@ fun ConfirmationDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val wallpaperConfig = LocalWallpaperConfig.current
+    val dialogBg = if (wallpaperConfig.isWallpaperActive) {
+        wallpaperConfig.surfaceColor.copy(alpha = 0.92f)
+    } else {
+        MotoGlassDark
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
                 text = title,
                 color = MotoTextPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.3).sp
             )
         },
         text = {
             Text(
                 text = message,
                 color = MotoTextSecondary,
-                fontSize = 14.sp,
-                lineHeight = 20.sp
+                fontSize = 14.5.sp,
+                lineHeight = 21.sp
             )
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    onConfirm()
-                    onDismiss()
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isDestructive) MotoError else MotoViolet
-                ),
-                shape = RoundedCornerShape(10.dp)
+            val buttonColor = if (isDestructive) MotoError else MotoViolet
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(buttonColor)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.20f), Color.Transparent)
+                        )
+                    )
+                    .border(
+                        BorderStroke(0.5.dp, Color.White.copy(alpha = 0.30f)),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .applePressable(pressScale = 0.94f) {
+                        onConfirm()
+                        onDismiss()
+                    }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text(text = confirmText, color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = confirmText,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = dismissText, color = MotoTextSecondary)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.06f))
+                    .border(
+                        BorderStroke(0.5.dp, Color.White.copy(alpha = 0.12f)),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .applePressable(pressScale = 0.94f) {
+                        onDismiss()
+                    }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = dismissText,
+                    color = MotoTextSecondary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
             }
         },
-        containerColor = MotoSurface,
-        shape = RoundedCornerShape(20.dp)
+        containerColor = dialogBg,
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier
+            .border(
+                BorderStroke(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.05f))
+                    )
+                ),
+                RoundedCornerShape(24.dp)
+            )
+            .background(MotoGlassSheenBrush, RoundedCornerShape(24.dp))
     )
 }
 
@@ -101,6 +159,12 @@ fun InputTextDialog(
     onDismiss: () -> Unit
 ) {
     var textValue by remember { mutableStateOf(initialValue) }
+    val wallpaperConfig = LocalWallpaperConfig.current
+    val dialogBg = if (wallpaperConfig.isWallpaperActive) {
+        wallpaperConfig.surfaceColor.copy(alpha = 0.92f)
+    } else {
+        MotoGlassDark
+    }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -108,8 +172,9 @@ fun InputTextDialog(
             Text(
                 text = title,
                 color = MotoTextPrimary,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
+                fontSize = 19.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = (-0.3).sp
             )
         },
         text = {
@@ -123,33 +188,80 @@ fun InputTextDialog(
                         focusedTextColor = MotoTextPrimary,
                         unfocusedTextColor = MotoTextPrimary,
                         focusedBorderColor = MotoViolet,
-                        unfocusedBorderColor = MotoBorder,
+                        unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
                         cursorColor = MotoViolet
                     ),
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.fillMaxWidth()
                 )
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    if (textValue.isNotBlank()) {
-                        onConfirm(textValue.trim())
-                        onDismiss()
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MotoViolet)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.20f), Color.Transparent)
+                        )
+                    )
+                    .border(
+                        BorderStroke(0.5.dp, Color.White.copy(alpha = 0.30f)),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .applePressable(pressScale = 0.94f) {
+                        if (textValue.isNotBlank()) {
+                            onConfirm(textValue.trim())
+                            onDismiss()
+                        }
                     }
-                },
-                colors = ButtonDefaults.buttonColors(containerColor = MotoViolet),
-                shape = RoundedCornerShape(10.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text(text = confirmText, color = Color.White, fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = confirmText,
+                    color = Color.White,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 14.sp
+                )
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(text = "Cancel", color = MotoTextSecondary)
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.White.copy(alpha = 0.06f))
+                    .border(
+                        BorderStroke(0.5.dp, Color.White.copy(alpha = 0.12f)),
+                        RoundedCornerShape(12.dp)
+                    )
+                    .applePressable(pressScale = 0.94f) {
+                        onDismiss()
+                    }
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Cancel",
+                    color = MotoTextSecondary,
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 14.sp
+                )
             }
         },
-        containerColor = MotoSurface,
-        shape = RoundedCornerShape(20.dp)
+        containerColor = dialogBg,
+        shape = RoundedCornerShape(24.dp),
+        modifier = Modifier
+            .border(
+                BorderStroke(
+                    1.dp,
+                    Brush.verticalGradient(
+                        listOf(Color.White.copy(alpha = 0.25f), Color.White.copy(alpha = 0.05f))
+                    )
+                ),
+                RoundedCornerShape(24.dp)
+            )
+            .background(MotoGlassSheenBrush, RoundedCornerShape(24.dp))
     )
 }

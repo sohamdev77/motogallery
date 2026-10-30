@@ -203,9 +203,9 @@ fun PhotosScreen(
 
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(uiState.gridColumns),
-                    contentPadding = PaddingValues(2.dp),
-                    horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    verticalArrangement = Arrangement.spacedBy(3.dp),
                     modifier = Modifier.fillMaxSize()
                 ) {
                     groupedByDate.forEach { (dateHeader, itemsInGroup) ->
@@ -214,9 +214,10 @@ fun PhotosScreen(
                                 Text(
                                     text = dateHeader,
                                     color = MotoTextPrimary,
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    modifier = Modifier.padding(start = 10.dp, top = 16.dp, bottom = 6.dp)
+                                    fontSize = 14.5.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.2).sp,
+                                    modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp)
                                 )
                             }
                         }

@@ -119,6 +119,11 @@ import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoTextTertiary
 import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSurface
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.MotoGlassBorderBrush
+import com.motogallery.app.ui.theme.applePressable
 import com.motogallery.app.util.DateFormatter
 import com.motogallery.app.util.FileSizeFormatter
 import kotlinx.coroutines.launch
@@ -171,10 +176,24 @@ fun SwipeCleanScreen(
         containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = wallpaperConfig.topBarColor,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
+            val topBarBg = if (wallpaperConfig.isWallpaperActive) {
+                wallpaperConfig.topBarColor.copy(alpha = 0.85f)
+            } else {
+                MotoGlassDark
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(topBarBg)
+                    .background(MotoGlassSheenBrush)
+                    .border(
+                        androidx.compose.foundation.BorderStroke(
+                            0.5.dp,
+                            Brush.verticalGradient(
+                                listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
+                            )
+                        )
+                    )
             ) {
                 Column(
                     modifier = Modifier
@@ -200,8 +219,9 @@ fun SwipeCleanScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "Swipe Clean",
-                                fontSize = 20.sp,
+                                fontSize = 21.sp,
                                 fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.4).sp,
                                 color = MotoTextPrimary
                             )
                         }
@@ -256,14 +276,28 @@ fun SwipeCleanScreen(
                 .padding(horizontal = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Live Storage & Review Metric Dashboard Card
-            Surface(
-                color = wallpaperConfig.surfaceColor,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder),
+            // Live Storage & Review Metric Dashboard Frosted Glass Card
+            val dashboardBg = if (wallpaperConfig.isWallpaperActive) {
+                wallpaperConfig.surfaceColor.copy(alpha = 0.85f)
+            } else {
+                MotoGlassSurface
+            }
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 10.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .background(dashboardBg)
+                    .background(MotoGlassSheenBrush)
+                    .border(
+                        androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            Brush.verticalGradient(
+                                listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.04f))
+                            )
+                        ),
+                        RoundedCornerShape(20.dp)
+                    )
             ) {
                 Row(
                     modifier = Modifier
@@ -418,13 +452,27 @@ fun SwipeCleanScreen(
             }
 
             // Bottom Tap Buttons: Undo, Trash, Preview, Keep
-            Surface(
-                color = wallpaperConfig.surfaceColor,
-                shape = RoundedCornerShape(24.dp),
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder),
+            val bottomDockBg = if (wallpaperConfig.isWallpaperActive) {
+                wallpaperConfig.surfaceColor.copy(alpha = 0.85f)
+            } else {
+                MotoGlassSurface
+            }
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 14.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .background(bottomDockBg)
+                    .background(MotoGlassSheenBrush)
+                    .border(
+                        androidx.compose.foundation.BorderStroke(
+                            1.dp,
+                            Brush.verticalGradient(
+                                listOf(Color.White.copy(alpha = 0.24f), Color.White.copy(alpha = 0.04f))
+                            )
+                        ),
+                        RoundedCornerShape(28.dp)
+                    )
             ) {
                 Row(
                     modifier = Modifier
@@ -434,13 +482,22 @@ fun SwipeCleanScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     // Undo Button
-                    IconButton(
-                        onClick = { viewModel.undo() },
-                        enabled = uiState.canUndo,
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(if (uiState.canUndo) MotoSurfaceVariant else MotoSurfaceVariant.copy(alpha = 0.3f))
+                            .background(if (uiState.canUndo) Color.White.copy(alpha = 0.10f) else Color.White.copy(alpha = 0.03f))
+                            .border(
+                                androidx.compose.foundation.BorderStroke(
+                                    0.5.dp,
+                                    if (uiState.canUndo) Color.White.copy(alpha = 0.20f) else Color.Transparent
+                                ),
+                                CircleShape
+                            )
+                            .applePressable(pressScale = 0.86f, enabled = uiState.canUndo) {
+                                viewModel.undo()
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.Undo,
@@ -451,18 +508,26 @@ fun SwipeCleanScreen(
                     }
 
                     // Left Trash Button
-                    IconButton(
-                        onClick = {
-                            if (uiState.unreviewedItems.isNotEmpty()) {
-                                cardController.swipeLeft()
-                            }
-                        },
-                        enabled = uiState.unreviewedItems.isNotEmpty(),
+                    Box(
                         modifier = Modifier
                             .size(54.dp)
                             .clip(CircleShape)
-                            .background(MotoError.copy(alpha = 0.15f))
-                            .border(1.dp, MotoError, CircleShape)
+                            .background(MotoError.copy(alpha = 0.18f))
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color.White.copy(alpha = 0.15f), Color.Transparent)
+                                )
+                            )
+                            .border(
+                                androidx.compose.foundation.BorderStroke(1.dp, MotoError.copy(alpha = 0.70f)),
+                                CircleShape
+                            )
+                            .applePressable(pressScale = 0.86f, enabled = uiState.unreviewedItems.isNotEmpty()) {
+                                if (uiState.unreviewedItems.isNotEmpty()) {
+                                    cardController.swipeLeft()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Close,
@@ -473,17 +538,21 @@ fun SwipeCleanScreen(
                     }
 
                     // Preview Button
-                    IconButton(
-                        onClick = {
-                            if (uiState.unreviewedItems.isNotEmpty()) {
-                                viewModel.swipeUp(uiState.unreviewedItems.first())
-                            }
-                        },
-                        enabled = uiState.unreviewedItems.isNotEmpty(),
+                    Box(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(MotoSurfaceVariant)
+                            .background(Color.White.copy(alpha = 0.10f))
+                            .border(
+                                androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.20f)),
+                                CircleShape
+                            )
+                            .applePressable(pressScale = 0.86f, enabled = uiState.unreviewedItems.isNotEmpty()) {
+                                if (uiState.unreviewedItems.isNotEmpty()) {
+                                    viewModel.swipeUp(uiState.unreviewedItems.first())
+                                }
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Visibility,
@@ -494,18 +563,26 @@ fun SwipeCleanScreen(
                     }
 
                     // Right Keep Button
-                    IconButton(
-                        onClick = {
-                            if (uiState.unreviewedItems.isNotEmpty()) {
-                                cardController.swipeRight()
-                            }
-                        },
-                        enabled = uiState.unreviewedItems.isNotEmpty(),
+                    Box(
                         modifier = Modifier
                             .size(54.dp)
                             .clip(CircleShape)
-                            .background(MotoEmerald.copy(alpha = 0.15f))
-                            .border(1.dp, MotoEmerald, CircleShape)
+                            .background(MotoEmerald.copy(alpha = 0.18f))
+                            .background(
+                                Brush.verticalGradient(
+                                    listOf(Color.White.copy(alpha = 0.15f), Color.Transparent)
+                                )
+                            )
+                            .border(
+                                androidx.compose.foundation.BorderStroke(1.dp, MotoEmerald.copy(alpha = 0.70f)),
+                                CircleShape
+                            )
+                            .applePressable(pressScale = 0.86f, enabled = uiState.unreviewedItems.isNotEmpty()) {
+                                if (uiState.unreviewedItems.isNotEmpty()) {
+                                    cardController.swipeRight()
+                                }
+                            },
+                        contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Check,

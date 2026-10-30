@@ -61,6 +61,14 @@ import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoTextTertiary
 import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.AppleSprings
+import com.motogallery.app.ui.theme.MotoGlassBorderBrush
+import com.motogallery.app.ui.theme.MotoGlassSurface
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.applePressable
+import com.motogallery.app.ui.theme.glassmorphic
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.launch
 
 @Composable
@@ -178,16 +186,25 @@ fun VaultAuthScreen(
             ) {
                 repeat(4) { index ->
                     val isFilled = index < enteredPin.length
+                    val dotScale by animateFloatAsState(
+                        targetValue = if (isFilled) 1.15f else 1.0f,
+                        animationSpec = AppleSprings.BouncySpring,
+                        label = "pinDotScale"
+                    )
                     Box(
                         modifier = Modifier
                             .size(16.dp)
+                            .graphicsLayer {
+                                scaleX = dotScale
+                                scaleY = dotScale
+                            }
                             .clip(CircleShape)
                             .background(
-                                if (isFilled) MotoViolet else MotoSurfaceVariant
+                                if (isFilled) MotoViolet else MotoGlassSurface
                             )
                             .border(
                                 width = 1.5.dp,
-                                color = if (isFilled) MotoViolet else MotoBorder,
+                                brush = if (isFilled) androidx.compose.ui.graphics.SolidColor(MotoViolet) else MotoGlassBorderBrush,
                                 shape = CircleShape
                             )
                     )
@@ -207,23 +224,30 @@ fun VaultAuthScreen(
         }
 
         // Security Warning Card
-        Surface(
-            color = MotoSurface,
-            shape = RoundedCornerShape(14.dp),
-            border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder),
-            modifier = Modifier.fillMaxWidth()
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .glassmorphic(shape = RoundedCornerShape(16.dp))
+                .padding(14.dp)
         ) {
             Row(
-                modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = Icons.Default.Shield,
-                    contentDescription = null,
-                    tint = MotoOrange,
-                    modifier = Modifier.size(24.dp)
-                )
-                Spacer(modifier = Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(MotoOrange.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Shield,
+                        contentDescription = null,
+                        tint = MotoOrange,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Text(
                     text = "AES-256-GCM hardware encryption. Decrypted media stays in RAM only. Backup risk: uninstalling the app deletes encrypted vault files permanently.",
                     color = MotoTextSecondary,
@@ -344,11 +368,11 @@ private fun KeypadButton(
 ) {
     Box(
         modifier = modifier
-            .size(68.dp)
+            .size(72.dp)
             .clip(CircleShape)
-            .background(MotoSurface)
-            .border(1.dp, MotoBorder, CircleShape)
-            .clickable(onClick = onClick),
+            .background(MotoGlassSurface)
+            .border(1.dp, MotoGlassBorderBrush, CircleShape)
+            .applePressable(pressScale = 0.88f, onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
         content()

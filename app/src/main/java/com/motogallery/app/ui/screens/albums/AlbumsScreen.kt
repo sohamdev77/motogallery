@@ -53,9 +53,13 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.motogallery.app.data.model.Album
 import com.motogallery.app.ui.components.InputTextDialog
+import androidx.compose.ui.graphics.Brush
 import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.GlassBadge
 import com.motogallery.app.ui.theme.MotoPink
 import com.motogallery.app.ui.theme.MotoSurface
 import com.motogallery.app.ui.theme.MotoSurfaceVariant
@@ -63,6 +67,7 @@ import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoTextTertiary
 import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.applePressable
 
 @Composable
 fun AlbumsScreen(
@@ -78,35 +83,66 @@ fun AlbumsScreen(
         modifier = modifier.fillMaxSize(),
         containerColor = wallpaperConfig.backgroundColor,
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = wallpaperConfig.topBarColor,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
+            val topBarBg = if (wallpaperConfig.isWallpaperActive) {
+                wallpaperConfig.topBarColor.copy(alpha = 0.85f)
+            } else {
+                MotoGlassDark
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(topBarBg)
+                    .background(MotoGlassSheenBrush)
+                    .border(
+                        androidx.compose.foundation.BorderStroke(
+                            0.5.dp,
+                            Brush.verticalGradient(
+                                listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
+                            )
+                        )
+                    )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Albums",
                         color = MotoTextPrimary,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.4).sp
                     )
                 }
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { showCreateAlbumDialog = true },
-                containerColor = MotoViolet,
-                contentColor = Color.White,
-                shape = CircleShape
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .clip(CircleShape)
+                    .background(MotoViolet)
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.25f), Color.Transparent)
+                        )
+                    )
+                    .border(
+                        androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.35f)),
+                        CircleShape
+                    )
+                    .applePressable(pressScale = 0.88f) { showCreateAlbumDialog = true },
+                contentAlignment = Alignment.Center
             ) {
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Create Album")
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Create Album",
+                    tint = Color.White,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     ) { innerPadding ->
@@ -239,16 +275,24 @@ fun CollectionCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(18.dp))
+            .applePressable(pressScale = 0.95f, onClick = onClick)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(18.dp))
                 .background(MotoSurfaceVariant)
-                .border(1.dp, MotoBorder, RoundedCornerShape(16.dp)),
+                .border(
+                    androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.04f))
+                        )
+                    ),
+                    RoundedCornerShape(18.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             if (coverUri != null) {
@@ -261,11 +305,15 @@ fun CollectionCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
-                // Slight dark gradient at bottom
+                // Frosted gradient overlay
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.25f))
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f))
+                            )
+                        )
                 )
             } else {
                 Icon(
@@ -276,36 +324,38 @@ fun CollectionCard(
                 )
             }
 
-            Box(
+            // Frosted Glass Icon Badge
+            GlassBadge(
+                backgroundColor = Color.Black.copy(alpha = 0.55f),
+                borderColor = Color.White.copy(alpha = 0.22f),
+                shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
-                    .size(28.dp)
-                    .clip(CircleShape)
-                    .background(Color.Black.copy(alpha = 0.6f)),
-                contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
                     tint = iconTint,
-                    modifier = Modifier.size(16.dp)
+                    modifier = Modifier.size(15.dp)
                 )
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(7.dp))
 
         Text(
             text = title,
             color = MotoTextPrimary,
             fontSize = 15.sp,
-            fontWeight = FontWeight.SemiBold
+            fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-0.2).sp
         )
         Text(
             text = "$count items",
             color = MotoTextSecondary,
-            fontSize = 12.sp
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
         )
     }
 }
@@ -319,16 +369,24 @@ fun AlbumCard(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onClick)
+            .clip(RoundedCornerShape(18.dp))
+            .applePressable(pressScale = 0.95f, onClick = onClick)
     ) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .clip(RoundedCornerShape(16.dp))
+                .clip(RoundedCornerShape(18.dp))
                 .background(MotoSurfaceVariant)
-                .border(1.dp, MotoBorder, RoundedCornerShape(16.dp)),
+                .border(
+                    androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        Brush.verticalGradient(
+                            listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.04f))
+                        )
+                    ),
+                    RoundedCornerShape(18.dp)
+                ),
             contentAlignment = Alignment.Center
         ) {
             if (album.coverUri != null) {
@@ -341,6 +399,15 @@ fun AlbumCard(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()
                 )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                listOf(Color.Transparent, Color.Black.copy(alpha = 0.40f))
+                            )
+                        )
+                )
             } else {
                 Icon(
                     imageVector = Icons.Default.Folder,
@@ -351,19 +418,21 @@ fun AlbumCard(
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(7.dp))
 
         Text(
             text = album.name,
             color = MotoTextPrimary,
             fontSize = 15.sp,
             fontWeight = FontWeight.SemiBold,
+            letterSpacing = (-0.2).sp,
             maxLines = 1
         )
         Text(
             text = "${album.itemCount} items",
             color = MotoTextSecondary,
-            fontSize = 12.sp
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Medium
         )
     }
 }

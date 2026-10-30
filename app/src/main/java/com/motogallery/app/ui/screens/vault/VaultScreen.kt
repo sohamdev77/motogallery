@@ -84,6 +84,16 @@ import com.motogallery.app.ui.theme.MotoSurfaceVariant
 import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.AppleSprings
+import com.motogallery.app.ui.theme.GlassBadge
+import com.motogallery.app.ui.theme.MotoGlassBorderBrush
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.MotoGlassSurface
+import com.motogallery.app.ui.theme.applePressable
+import com.motogallery.app.ui.theme.glassmorphic
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.ui.graphics.graphicsLayer
 import com.motogallery.app.util.DateFormatter
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -161,11 +171,23 @@ fun VaultScreen(
         containerColor = MotoBackground,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MotoBackground,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MotoGlassDark)
+                    .border(
+                        width = 0.5.dp,
+                        brush = MotoGlassBorderBrush,
+                        shape = androidx.compose.ui.graphics.RectangleShape
+                    )
             ) {
+                // Specular top edge highlight
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(MotoGlassSheenBrush)
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -178,15 +200,25 @@ fun VaultScreen(
                         color = MotoTextPrimary,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.02).sp,
                         modifier = Modifier.weight(1f)
                     )
 
-                    // Lock button
-                    IconButton(onClick = { viewModel.lockVault() }) {
+                    // Lock button with Apple tactile feedback
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(MotoGlassSurface)
+                            .border(0.5.dp, MotoGlassBorderBrush, CircleShape)
+                            .applePressable(pressScale = 0.90f) { viewModel.lockVault() },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.Default.Lock,
                             contentDescription = "Lock Vault",
-                            tint = MotoViolet
+                            tint = MotoViolet,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -194,63 +226,88 @@ fun VaultScreen(
         },
         floatingActionButton = {
             if (!uiState.isSelectionMode) {
-                FloatingActionButton(
-                    onClick = {
-                        scope.launch(Dispatchers.IO) {
-                            val items = viewModel.queryAvailablePublicMedia()
-                            withContext(Dispatchers.Main) {
-                                availableMedia = items
-                                selectedMediaToImport = emptySet()
-                                showAddMediaSheet = true
+                Box(
+                    modifier = Modifier
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(MotoViolet)
+                        .border(1.dp, Color.White.copy(alpha = 0.25f), CircleShape)
+                        .applePressable(pressScale = 0.90f) {
+                            scope.launch(Dispatchers.IO) {
+                                val items = viewModel.queryAvailablePublicMedia()
+                                withContext(Dispatchers.Main) {
+                                    availableMedia = items
+                                    selectedMediaToImport = emptySet()
+                                    showAddMediaSheet = true
+                                }
                             }
-                        }
-                    },
-                    containerColor = MotoViolet,
-                    contentColor = Color.White,
-                    shape = CircleShape
+                        },
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Media to Vault")
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Media to Vault",
+                        tint = Color.White
+                    )
                 }
             }
         },
         bottomBar = {
             if (uiState.isSelectionMode) {
-                Surface(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    color = MotoSurface,
-                    shape = RoundedCornerShape(20.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MotoBorder)
+                        .padding(16.dp)
+                        .glassmorphic(shape = RoundedCornerShape(20.dp))
                 ) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 16.dp, vertical = 10.dp),
+                            .padding(horizontal = 24.dp, vertical = 10.dp),
                         horizontalArrangement = Arrangement.SpaceAround,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // Restore button
-                        IconButton(onClick = { showRestoreConfirmDialog = true }) {
+                        Box(
+                            modifier = Modifier
+                                .applePressable(pressScale = 0.88f) { showRestoreConfirmDialog = true }
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     imageVector = Icons.Default.Restore,
                                     contentDescription = "Restore",
                                     tint = MotoViolet
                                 )
-                                Text(text = "Restore", color = MotoTextPrimary, fontSize = 10.sp)
+                                Text(
+                                    text = "Restore",
+                                    color = MotoTextPrimary,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
 
                         // Trash button
-                        IconButton(onClick = { showTrashConfirmDialog = true }) {
+                        Box(
+                            modifier = Modifier
+                                .applePressable(pressScale = 0.88f) { showTrashConfirmDialog = true }
+                                .padding(horizontal = 16.dp, vertical = 6.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Icon(
                                     imageVector = Icons.Default.Delete,
                                     contentDescription = "Trash",
                                     tint = MotoError
                                 )
-                                Text(text = "Trash", color = MotoTextPrimary, fontSize = 10.sp)
+                                Text(
+                                    text = "Trash",
+                                    color = MotoError,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium
+                                )
                             }
                         }
                     }
@@ -511,7 +568,6 @@ fun VaultScreen(
     }
 }
 
-@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun VaultThumbnailCard(
     item: VaultItem,
@@ -536,12 +592,23 @@ fun VaultThumbnailCard(
         }
     }
 
+    val cardScale by animateFloatAsState(
+        targetValue = if (isSelected) 0.92f else 1.0f,
+        animationSpec = AppleSprings.BouncySpring,
+        label = "vaultCardScale"
+    )
+
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .clip(RoundedCornerShape(6.dp))
+            .graphicsLayer {
+                scaleX = cardScale
+                scaleY = cardScale
+            }
+            .clip(RoundedCornerShape(10.dp))
             .background(MotoSurfaceVariant)
-            .combinedClickable(
+            .applePressable(
+                pressScale = 0.95f,
                 onClick = onClick,
                 onLongClick = onLongClick
             ),
@@ -567,8 +634,8 @@ fun VaultThumbnailCard(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MotoViolet.copy(alpha = 0.35f))
-                    .border(2.dp, MotoViolet, RoundedCornerShape(6.dp))
+                    .background(MotoViolet.copy(alpha = 0.30f))
+                    .border(2.dp, MotoViolet, RoundedCornerShape(10.dp))
             )
         }
 
@@ -577,9 +644,14 @@ fun VaultThumbnailCard(
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(6.dp)
-                    .size(22.dp)
+                    .size(24.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) MotoViolet else Color.Black.copy(alpha = 0.5f)),
+                    .background(if (isSelected) MotoViolet else Color.Black.copy(alpha = 0.55f))
+                    .border(
+                        1.dp,
+                        if (isSelected) Color.White.copy(alpha = 0.8f) else Color.White.copy(alpha = 0.3f),
+                        CircleShape
+                    ),
                 contentAlignment = Alignment.Center
             ) {
                 if (isSelected) {
@@ -587,7 +659,7 @@ fun VaultThumbnailCard(
                         imageVector = Icons.Default.Check,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(14.dp)
+                        modifier = Modifier.size(15.dp)
                     )
                 }
             }
@@ -597,17 +669,16 @@ fun VaultThumbnailCard(
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(4.dp)
-                    .clip(RoundedCornerShape(4.dp))
-                    .background(Color.Black.copy(alpha = 0.7f))
-                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                    .padding(6.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.PlayArrow,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(12.dp)
-                )
+                GlassBadge {
+                    Icon(
+                        imageVector = Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(12.dp)
+                    )
+                }
             }
         }
     }

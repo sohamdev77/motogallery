@@ -71,6 +71,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.motogallery.app.ui.components.ConfirmationDialog
 import com.motogallery.app.ui.components.InputTextDialog
+import androidx.compose.ui.graphics.Brush
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSurface
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.applePressable
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
 import com.motogallery.app.ui.theme.MotoOrange
@@ -122,23 +127,38 @@ fun SettingsScreen(
             containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = wallpaperConfig.topBarColor,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
+            val topBarBg = if (wallpaperConfig.isWallpaperActive) {
+                wallpaperConfig.topBarColor.copy(alpha = 0.85f)
+            } else {
+                MotoGlassDark
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(topBarBg)
+                    .background(MotoGlassSheenBrush)
+                    .border(
+                        androidx.compose.foundation.BorderStroke(
+                            0.5.dp,
+                            Brush.verticalGradient(
+                                listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
+                            )
+                        )
+                    )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "Settings",
                         color = MotoTextPrimary,
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.4).sp
                     )
                 }
             }
@@ -161,12 +181,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                color = MotoSurface,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            SettingsGlassCard {
                 Column(modifier = Modifier.padding(16.dp)) {
                     StorageItemRow(
                         title = "Photos",
@@ -203,12 +218,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                color = wallpaperConfig.surfaceColor,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            SettingsGlassCard {
                 Column {
                     SettingsClickableRow(
                         icon = Icons.Default.Wallpaper,
@@ -264,14 +274,9 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                color = if (uiState.isHalloweenTheme) MotoHalloweenSurface else wallpaperConfig.surfaceColor,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(
-                    0.5.dp,
-                    if (uiState.isHalloweenTheme) MotoHalloweenBorder else MotoBorder
-                ),
-                modifier = Modifier.fillMaxWidth()
+            SettingsGlassCard(
+                borderColor = if (uiState.isHalloweenTheme) MotoHalloweenBorder else null,
+                cardBackgroundColor = if (uiState.isHalloweenTheme) MotoHalloweenSurface else null
             ) {
                 Column {
                     SettingsSwitchRow(
@@ -413,12 +418,7 @@ fun SettingsScreen(
                 modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
             )
 
-            Surface(
-                color = MotoSurface,
-                shape = RoundedCornerShape(16.dp),
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder),
-                modifier = Modifier.fillMaxWidth()
-            ) {
+            SettingsGlassCard {
                 Column {
                     SettingsClickableRow(
                         icon = Icons.Default.Delete,
@@ -502,6 +502,43 @@ private fun StorageItemRow(
 }
 
 @Composable
+private fun SettingsGlassCard(
+    modifier: Modifier = Modifier,
+    borderColor: Color? = null,
+    cardBackgroundColor: Color? = null,
+    content: @Composable () -> Unit
+) {
+    val wallpaperConfig = LocalWallpaperConfig.current
+    val cardBg = cardBackgroundColor ?: (if (wallpaperConfig.isWallpaperActive) {
+        wallpaperConfig.surfaceColor.copy(alpha = 0.85f)
+    } else {
+        MotoGlassSurface
+    })
+
+    val borderStroke = if (borderColor != null) {
+        androidx.compose.foundation.BorderStroke(0.5.dp, borderColor)
+    } else {
+        androidx.compose.foundation.BorderStroke(
+            1.dp,
+            Brush.verticalGradient(
+                listOf(Color.White.copy(alpha = 0.22f), Color.White.copy(alpha = 0.04f))
+            )
+        )
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(cardBg)
+            .background(MotoGlassSheenBrush)
+            .border(borderStroke, RoundedCornerShape(20.dp))
+    ) {
+        content()
+    }
+}
+
+@Composable
 private fun SettingsSwitchRow(
     icon: ImageVector,
     title: String,
@@ -515,27 +552,41 @@ private fun SettingsSwitchRow(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(enabled = enabled) { onCheckedChange(!checked) }
-            .padding(16.dp),
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (enabled) iconTint else MotoTextTertiary,
-            modifier = Modifier.size(22.dp)
-        )
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White.copy(alpha = 0.08f))
+                .border(
+                    androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                    RoundedCornerShape(10.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (enabled) iconTint else MotoTextTertiary,
+                modifier = Modifier.size(19.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = title,
                 color = if (enabled) MotoTextPrimary else MotoTextTertiary,
                 fontSize = 15.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.2).sp
             )
             Text(
                 text = subtitle,
                 color = if (enabled) MotoTextSecondary else MotoTextTertiary,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 1.dp)
             )
         }
         Switch(
@@ -562,15 +613,43 @@ private fun SettingsClickableRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(16.dp),
+            .applePressable(pressScale = 0.98f, onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = MotoViolet, modifier = Modifier.size(22.dp))
+        Box(
+            modifier = Modifier
+                .size(34.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Color.White.copy(alpha = 0.08f))
+                .border(
+                    androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.15f)),
+                    RoundedCornerShape(10.dp)
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MotoViolet,
+                modifier = Modifier.size(19.dp)
+            )
+        }
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, color = MotoTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-            Text(text = subtitle, color = MotoTextSecondary, fontSize = 12.sp)
+            Text(
+                text = title,
+                color = MotoTextPrimary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = (-0.2).sp
+            )
+            Text(
+                text = subtitle,
+                color = MotoTextSecondary,
+                fontSize = 12.sp,
+                modifier = Modifier.padding(top = 1.dp)
+            )
         }
         Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null, tint = MotoTextTertiary)
     }

@@ -62,6 +62,10 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.motogallery.app.data.model.TrashedMediaItem
 import com.motogallery.app.ui.components.ConfirmationDialog
+import androidx.compose.ui.graphics.Brush
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.applePressable
 import com.motogallery.app.ui.theme.LocalWallpaperConfig
 import com.motogallery.app.ui.theme.MotoBackground
 import com.motogallery.app.ui.theme.MotoBorder
@@ -108,72 +112,125 @@ fun TrashScreen(
         containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = wallpaperConfig.topBarColor,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
+            val topBarBg = if (wallpaperConfig.isWallpaperActive) {
+                wallpaperConfig.topBarColor.copy(alpha = 0.85f)
+            } else {
+                MotoGlassDark
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(topBarBg)
+                    .background(MotoGlassSheenBrush)
+                    .border(
+                        androidx.compose.foundation.BorderStroke(
+                            0.5.dp,
+                            Brush.verticalGradient(
+                                listOf(Color.White.copy(alpha = 0.16f), Color.White.copy(alpha = 0.04f))
+                            )
+                        )
+                    )
             ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(horizontal = 8.dp, vertical = 10.dp),
+                        .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onNavigateBack) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.08f))
+                            .applePressable(pressScale = 0.88f) { onNavigateBack() },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.Default.ArrowBack,
                             contentDescription = "Back",
-                            tint = MotoTextPrimary
+                            tint = MotoTextPrimary,
+                            modifier = Modifier.size(20.dp)
                         )
                     }
 
                     Text(
                         text = if (uiState.isSelectionMode) "${uiState.selectedIds.size} selected" else "Recently Deleted",
                         color = MotoTextPrimary,
-                        fontSize = 18.sp,
+                        fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(start = 6.dp)
+                        letterSpacing = (-0.3).sp,
+                        modifier = Modifier.padding(start = 12.dp)
                     )
                 }
             }
         },
         bottomBar = {
             if (uiState.isSelectionMode) {
-                Surface(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
-                        .navigationBarsPadding(),
-                    color = MotoSurface,
-                    shape = RoundedCornerShape(20.dp),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MotoBorder)
+                        .navigationBarsPadding()
+                        .clip(RoundedCornerShape(26.dp))
+                        .background(MotoGlassDark)
+                        .background(MotoGlassSheenBrush)
+                        .border(
+                            androidx.compose.foundation.BorderStroke(
+                                1.dp,
+                                Brush.verticalGradient(
+                                    listOf(Color.White.copy(alpha = 0.28f), Color.White.copy(alpha = 0.05f))
+                                )
+                            ),
+                            RoundedCornerShape(26.dp)
+                        )
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 10.dp),
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Button(
-                            onClick = { showRestoreDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = MotoViolet),
-                            shape = RoundedCornerShape(12.dp)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MotoViolet)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.White.copy(alpha = 0.22f), Color.Transparent)
+                                    )
+                                )
+                                .border(androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.35f)), RoundedCornerShape(14.dp))
+                                .applePressable(pressScale = 0.94f) { showRestoreDialog = true }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(imageVector = Icons.Default.Restore, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.size(6.dp))
-                            Text(text = "Restore (${uiState.selectedIds.size})")
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.Restore, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.size(6.dp))
+                                Text(text = "Restore (${uiState.selectedIds.size})", color = Color.White, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+                            }
                         }
 
-                        Button(
-                            onClick = { showPermanentDeleteDialog = true },
-                            colors = ButtonDefaults.buttonColors(containerColor = MotoError),
-                            shape = RoundedCornerShape(12.dp)
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(MotoError)
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.White.copy(alpha = 0.22f), Color.Transparent)
+                                    )
+                                )
+                                .border(androidx.compose.foundation.BorderStroke(0.5.dp, Color.White.copy(alpha = 0.35f)), RoundedCornerShape(14.dp))
+                                .applePressable(pressScale = 0.94f) { showPermanentDeleteDialog = true }
+                                .padding(horizontal = 16.dp, vertical = 10.dp),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Icon(imageVector = Icons.Default.DeleteForever, contentDescription = null, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.size(6.dp))
-                            Text(text = "Delete Forever")
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(imageVector = Icons.Default.DeleteForever, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.size(6.dp))
+                                Text(text = "Delete Forever", color = Color.White, fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold)
+                            }
                         }
                     }
                 }

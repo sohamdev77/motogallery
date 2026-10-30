@@ -76,6 +76,12 @@ import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextSecondary
 import com.motogallery.app.ui.theme.MotoTextTertiary
 import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.MotoGlassBorderBrush
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
+import com.motogallery.app.ui.theme.MotoGlassSurface
+import com.motogallery.app.ui.theme.applePressable
+import com.motogallery.app.ui.theme.glassmorphic
 import com.motogallery.app.ui.theme.WallpaperTheme
 
 val ACCENT_OPTIONS = listOf(
@@ -115,12 +121,23 @@ fun WallpaperPickerScreen(
         containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = wallpaperConfig.topBarColor,
-                tonalElevation = 4.dp,
-                border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(wallpaperConfig.topBarColor.copy(alpha = 0.88f))
+                    .border(
+                        width = 0.5.dp,
+                        brush = MotoGlassBorderBrush,
+                        shape = androidx.compose.ui.graphics.RectangleShape
+                    )
             ) {
+                // Specular top edge highlight
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(MotoGlassSheenBrush)
+                )
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -129,20 +146,34 @@ fun WallpaperPickerScreen(
                         .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    IconButton(onClick = onNavigateBack) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(MotoGlassSurface)
+                            .border(0.5.dp, MotoGlassBorderBrush, CircleShape)
+                            .applePressable(pressScale = 0.88f, onClick = onNavigateBack),
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = MotoTextPrimary
+                            tint = MotoTextPrimary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
 
-                    Column(modifier = Modifier.weight(1f)) {
+                    Column(
+                        modifier = Modifier
+                            .weight(1f)
+                            .padding(horizontal = 12.dp)
+                    ) {
                         Text(
                             text = "Wallpaper Themes",
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MotoTextPrimary
+                            color = MotoTextPrimary,
+                            letterSpacing = (-0.015).sp
                         )
                         Text(
                             text = "Whole-app personalized backgrounds",
@@ -151,11 +182,20 @@ fun WallpaperPickerScreen(
                         )
                     }
 
-                    IconButton(onClick = { viewModel.resetToDefault() }) {
+                    Box(
+                        modifier = Modifier
+                            .size(38.dp)
+                            .clip(CircleShape)
+                            .background(MotoGlassSurface)
+                            .border(0.5.dp, MotoGlassBorderBrush, CircleShape)
+                            .applePressable(pressScale = 0.88f) { viewModel.resetToDefault() },
+                        contentAlignment = Alignment.Center
+                    ) {
                         Icon(
                             imageVector = Icons.Default.RestartAlt,
                             contentDescription = "Reset to Default",
-                            tint = MotoTextSecondary
+                            tint = MotoTextSecondary,
+                            modifier = Modifier.size(18.dp)
                         )
                     }
                 }
@@ -173,12 +213,13 @@ fun WallpaperPickerScreen(
         ) {
             // Header / Intro
             item(span = { GridItemSpan(2) }) {
-                Surface(
-                    color = wallpaperConfig.surfaceColor,
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glassmorphic(shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column {
                         Text(
                             text = "BUILT-IN WALLPAPERS",
                             fontSize = 12.sp,
@@ -211,12 +252,13 @@ fun WallpaperPickerScreen(
             // Customization Section: Dimming, Theme Mode, Accents
             item(span = { GridItemSpan(2) }) {
                 Spacer(modifier = Modifier.height(8.dp))
-                Surface(
-                    color = wallpaperConfig.surfaceColor,
-                    shape = RoundedCornerShape(16.dp),
-                    border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .glassmorphic(shape = RoundedCornerShape(16.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                    Column {
                         Text(
                             text = "CUSTOMIZATION",
                             fontSize = 12.sp,
@@ -371,7 +413,7 @@ private fun WallpaperItemCard(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .clickable { onPreview() }
+            .applePressable(pressScale = 0.97f) { onPreview() }
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
             // Wallpaper Thumbnail
@@ -481,7 +523,8 @@ private fun WallpaperItemCard(
                 onClick = onApply,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(32.dp),
+                    .height(32.dp)
+                    .applePressable(pressScale = 0.93f, onClick = onApply),
                 contentPadding = PaddingValues(0.dp),
                 shape = RoundedCornerShape(8.dp),
                 colors = ButtonDefaults.buttonColors(

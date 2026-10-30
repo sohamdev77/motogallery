@@ -53,3 +53,20 @@ val MotoHalloweenGradientBrush = Brush.linearGradient(
     colors = listOf(MotoHalloweenOrange, MotoHalloweenAmber, MotoHalloweenPurple)
 )
 
+// Apple-Style Glassmorphic Materials & Specular Sheens
+val MotoGlassDark = Color(0xD90B1020)          // Translucent deep obsidian chrome
+val MotoGlassSurface = Color(0xB8131A2E)       // Translucent elevated frosted surface
+val MotoGlassBorder = Color(0x2EFFFFFF)        // 18% translucent specular edge
+val MotoGlassHighlight = Color(0x1AFFFFFF)     // Subtle frosted glass highlight
+val MotoGlassSpecularTop = Color(0x3BFFFFFF)   // ~23% white light-catching top edge
+val MotoGlassSpecularBottom = Color(0x0AFFFFFF)// ~4% subtle bottom edge
+
+val MotoGlassBorderBrush = Brush.verticalGradient(
+    colors = listOf(MotoGlassSpecularTop, MotoGlassSpecularBottom)
+)
+
+val MotoGlassSheenBrush = Brush.verticalGradient(
+    colors = listOf(Color.White.copy(alpha = 0.07f), Color.Transparent)
+)
+
+

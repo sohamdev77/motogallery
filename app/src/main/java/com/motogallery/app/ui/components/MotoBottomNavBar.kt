@@ -1,10 +1,12 @@
 package com.motogallery.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,27 +32,28 @@ import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.motogallery.app.ui.navigation.Screen
+import com.motogallery.app.ui.theme.AppleSprings
 import com.motogallery.app.ui.theme.LocalWallpaperConfig
-import com.motogallery.app.ui.theme.MotoBackground
-import com.motogallery.app.ui.theme.MotoBorder
-import com.motogallery.app.ui.theme.MotoPink
-import com.motogallery.app.ui.theme.MotoSurface
+import com.motogallery.app.ui.theme.MotoGlassBorderBrush
+import com.motogallery.app.ui.theme.MotoGlassDark
+import com.motogallery.app.ui.theme.MotoGlassSheenBrush
 import com.motogallery.app.ui.theme.MotoTextPrimary
 import com.motogallery.app.ui.theme.MotoTextTertiary
-import com.motogallery.app.ui.theme.MotoViolet
+import com.motogallery.app.ui.theme.applePressable
 
 data class NavTabItem(
     val screen: Screen,
@@ -98,6 +101,13 @@ val navTabs = listOf(
     )
 )
 
+/**
+ * Apple-Style Floating Glass Dock Navigation Bar
+ *
+ * Translucent frosted glass pill with specular reflection along top edge,
+ * critically damped liquid spring transitions on tab switch,
+ * and instant tactile compression on touch down.
+ */
 @Composable
 fun MotoBottomNavBar(
     currentRoute: String?,
@@ -105,79 +115,140 @@ fun MotoBottomNavBar(
     modifier: Modifier = Modifier
 ) {
     val wallpaperConfig = LocalWallpaperConfig.current
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = wallpaperConfig.bottomBarColor,
-        tonalElevation = 8.dp,
-        border = androidx.compose.foundation.BorderStroke(0.5.dp, MotoBorder.copy(alpha = 0.5f))
+    val primaryColor = MaterialTheme.colorScheme.primary
+
+    val barBg = if (wallpaperConfig.isWallpaperActive) {
+        wallpaperConfig.bottomBarColor.copy(alpha = 0.82f)
+    } else {
+        MotoGlassDark
+    }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 6.dp)
+            .navigationBarsPadding()
     ) {
-        Row(
+        // Floating Frosted Glass Dock Container
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .height(64.dp)
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
+                .clip(RoundedCornerShape(26.dp))
+                .background(barBg)
+                .background(MotoGlassSheenBrush)
+                .border(
+                    BorderStroke(
+                        1.dp,
+                        Brush.verticalGradient(
+                            listOf(
+                                Color.White.copy(alpha = 0.22f), // Apple specular top light
+                                Color.White.copy(alpha = 0.04f)
+                            )
+                        )
+                    ),
+                    RoundedCornerShape(26.dp)
+                )
+                .padding(horizontal = 6.dp, vertical = 6.dp)
         ) {
-            val primaryColor = MaterialTheme.colorScheme.primary
-            navTabs.forEach { tab ->
-                val isSelected = currentRoute == tab.screen.route
-                val iconTint by animateColorAsState(
-                    targetValue = if (isSelected) primaryColor else MotoTextTertiary,
-                    animationSpec = tween(250),
-                    label = "iconTint"
-                )
-                val textTint by animateColorAsState(
-                    targetValue = if (isSelected) MotoTextPrimary else MotoTextTertiary,
-                    animationSpec = tween(250),
-                    label = "textTint"
-                )
-                val pillColor by animateColorAsState(
-                    targetValue = if (isSelected) primaryColor.copy(alpha = 0.16f) else androidx.compose.ui.graphics.Color.Transparent,
-                    animationSpec = tween(250),
-                    label = "pillColor"
-                )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(58.dp),
+                horizontalArrangement = Arrangement.SpaceAround,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                navTabs.forEach { tab ->
+                    val isSelected = currentRoute == tab.screen.route
 
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(16.dp))
-                        .clickable(
-                            interactionSource = remember { MutableInteractionSource() },
-                            indication = null
-                        ) {
-                            if (!isSelected) {
-                                onNavigate(tab.screen)
-                            }
-                        }
-                        .padding(horizontal = 2.dp, vertical = 2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    val iconTint by animateColorAsState(
+                        targetValue = if (isSelected) primaryColor else MotoTextTertiary,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        label = "iconTint"
+                    )
+
+                    val textTint by animateColorAsState(
+                        targetValue = if (isSelected) MotoTextPrimary else MotoTextTertiary,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        label = "textTint"
+                    )
+
+                    val pillBgColor by animateColorAsState(
+                        targetValue = if (isSelected) primaryColor.copy(alpha = 0.20f) else Color.Transparent,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        label = "pillBgColor"
+                    )
+
+                    val pillBorderColor by animateColorAsState(
+                        targetValue = if (isSelected) primaryColor.copy(alpha = 0.38f) else Color.Transparent,
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioNoBouncy,
+                            stiffness = Spring.StiffnessMedium
+                        ),
+                        label = "pillBorderColor"
+                    )
+
+                    val activeScale by animateFloatAsState(
+                        targetValue = if (isSelected) 1.05f else 1.0f,
+                        animationSpec = AppleSprings.BouncySpring,
+                        label = "activeScale"
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(18.dp))
+                            .applePressable(
+                                pressScale = 0.88f,
+                                onClick = {
+                                    if (!isSelected) {
+                                        onNavigate(tab.screen)
+                                    }
+                                }
+                            )
+                            .padding(horizontal = 4.dp, vertical = 2.dp),
+                        contentAlignment = Alignment.Center
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(pillColor)
-                                .padding(horizontal = 10.dp, vertical = 2.dp),
-                            contentAlignment = Alignment.Center
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
-                                contentDescription = tab.title,
-                                tint = iconTint,
-                                modifier = Modifier.size(20.dp)
+                            // Liquid frosted pill indicator
+                            Box(
+                                modifier = Modifier
+                                    .scale(activeScale)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .background(pillBgColor)
+                                    .border(
+                                        BorderStroke(0.5.dp, pillBorderColor),
+                                        RoundedCornerShape(14.dp)
+                                    )
+                                    .padding(horizontal = 12.dp, vertical = 3.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = if (isSelected) tab.selectedIcon else tab.unselectedIcon,
+                                    contentDescription = tab.title,
+                                    tint = iconTint,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Text(
+                                text = tab.title,
+                                color = textTint,
+                                fontSize = 10.5.sp,
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+                                letterSpacing = (-0.1).sp,
+                                modifier = Modifier.padding(top = 2.dp)
                             )
                         }
-                        Text(
-                            text = tab.title,
-                            color = textTint,
-                            fontSize = 10.5.sp,
-                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                            modifier = Modifier.padding(top = 2.dp)
-                        )
                     }
                 }
             }
