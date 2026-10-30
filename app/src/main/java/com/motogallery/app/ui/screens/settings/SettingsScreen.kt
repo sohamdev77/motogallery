@@ -21,6 +21,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Celebration
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.ColorLens
 import androidx.compose.material.icons.filled.DarkMode
@@ -29,10 +32,17 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material.icons.filled.Wallpaper
+import com.motogallery.app.ui.screens.seasonal.EasterEggSessionState
+import com.motogallery.app.ui.screens.seasonal.PumpkinEasterEggPopup
+import com.motogallery.app.ui.theme.MotoHalloweenAmber
+import com.motogallery.app.ui.theme.MotoHalloweenBorder
+import com.motogallery.app.ui.theme.MotoHalloweenOrange
+import com.motogallery.app.ui.theme.MotoHalloweenSurface
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -87,6 +97,17 @@ fun SettingsScreen(
     var showChangePinDialog by remember { mutableStateOf(false) }
     var showAutoLockMenu by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
+    var showPumpkinPopup by remember { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.isHalloweenTheme, uiState.isSpecialAnimations, uiState.isPumpkinEasterEgg) {
+        if (uiState.isHalloweenTheme && uiState.isSpecialAnimations && uiState.isPumpkinEasterEgg) {
+            if (!EasterEggSessionState.hasShownPumpkinInSession) {
+                EasterEggSessionState.hasShownPumpkinInSession = true
+                kotlinx.coroutines.delay(650)
+                showPumpkinPopup = true
+            }
+        }
+    }
 
     LaunchedEffect(uiState.statusMessage) {
         uiState.statusMessage?.let {
@@ -95,9 +116,10 @@ fun SettingsScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = wallpaperConfig.backgroundColor,
+    Box(modifier = modifier.fillMaxSize()) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            containerColor = wallpaperConfig.backgroundColor,
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             Surface(
@@ -232,6 +254,78 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
+            // Seasonal Theme / Special Effects Section
+            Text(
+                text = "SEASONAL THEME / SPECIAL EFFECTS",
+                color = if (uiState.isHalloweenTheme) MotoHalloweenOrange else MotoViolet,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 1.sp,
+                modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+            )
+
+            Surface(
+                color = if (uiState.isHalloweenTheme) MotoHalloweenSurface else wallpaperConfig.surfaceColor,
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(
+                    0.5.dp,
+                    if (uiState.isHalloweenTheme) MotoHalloweenBorder else MotoBorder
+                ),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    SettingsSwitchRow(
+                        icon = Icons.Default.Celebration,
+                        title = "Enable Halloween Theme",
+                        subtitle = "Festive pumpkin orange & eerie dark styling",
+                        checked = uiState.isHalloweenTheme,
+                        onCheckedChange = { enabled ->
+                            viewModel.setHalloweenTheme(enabled)
+                            if (enabled && uiState.isSpecialAnimations && uiState.isPumpkinEasterEgg) {
+                                showPumpkinPopup = true
+                            }
+                        },
+                        iconTint = if (uiState.isHalloweenTheme) MotoHalloweenOrange else MotoViolet
+                    )
+
+                    SettingsSwitchRow(
+                        icon = Icons.Default.AutoAwesome,
+                        title = "Enable Special Animations",
+                        subtitle = "Flying bats, floating effects & seasonal animations",
+                        checked = uiState.isSpecialAnimations,
+                        onCheckedChange = { viewModel.setSpecialAnimations(it) },
+                        iconTint = if (uiState.isHalloweenTheme) MotoHalloweenOrange else MotoViolet
+                    )
+
+                    SettingsSwitchRow(
+                        icon = Icons.Default.Air,
+                        title = "Enable Flying Bats",
+                        subtitle = "Graceful nocturnal bats floating across headers",
+                        checked = uiState.isFlyingBats,
+                        onCheckedChange = { viewModel.setFlyingBats(it) },
+                        enabled = uiState.isSpecialAnimations,
+                        iconTint = if (uiState.isHalloweenTheme) MotoHalloweenOrange else MotoViolet
+                    )
+
+                    SettingsSwitchRow(
+                        icon = Icons.Default.Mood,
+                        title = "Enable Pumpkin Easter Egg",
+                        subtitle = "Playful scary smiling pumpkin appearance in settings",
+                        checked = uiState.isPumpkinEasterEgg,
+                        onCheckedChange = { enabled ->
+                            viewModel.setPumpkinEasterEgg(enabled)
+                            if (enabled && uiState.isHalloweenTheme && uiState.isSpecialAnimations) {
+                                showPumpkinPopup = true
+                            }
+                        },
+                        enabled = uiState.isSpecialAnimations,
+                        iconTint = if (uiState.isHalloweenTheme) MotoHalloweenOrange else MotoViolet
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
             // Vault Security Section
             Text(
                 text = "VAULT & SECURITY",
@@ -336,7 +430,7 @@ fun SettingsScreen(
                     SettingsClickableRow(
                         icon = Icons.Default.Info,
                         title = "About MotoGallery",
-                        subtitle = "Version 1.0.0 · Offline & Private",
+                        subtitle = "Version 1.2.0 · Offline & Private",
                         onClick = { showAboutDialog = true }
                     )
                 }
@@ -370,6 +464,13 @@ fun SettingsScreen(
                 viewModel.changeVaultPin(oldPin, newPin)
             },
             onDismiss = { showChangePinDialog = false }
+        )
+    }
+
+        PumpkinEasterEggPopup(
+            visible = showPumpkinPopup,
+            onDismiss = { showPumpkinPopup = false },
+            modifier = Modifier.align(Alignment.Center)
         )
     }
 }
@@ -406,27 +507,44 @@ private fun SettingsSwitchRow(
     title: String,
     subtitle: String,
     checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit
+    onCheckedChange: (Boolean) -> Unit,
+    enabled: Boolean = true,
+    iconTint: Color = MotoViolet
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable { onCheckedChange(!checked) }
+            .clickable(enabled = enabled) { onCheckedChange(!checked) }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(imageVector = icon, contentDescription = null, tint = MotoViolet, modifier = Modifier.size(22.dp))
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = if (enabled) iconTint else MotoTextTertiary,
+            modifier = Modifier.size(22.dp)
+        )
         Spacer(modifier = Modifier.width(14.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = title, color = MotoTextPrimary, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-            Text(text = subtitle, color = MotoTextSecondary, fontSize = 12.sp)
+            Text(
+                text = title,
+                color = if (enabled) MotoTextPrimary else MotoTextTertiary,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = subtitle,
+                color = if (enabled) MotoTextSecondary else MotoTextTertiary,
+                fontSize = 12.sp
+            )
         }
         Switch(
             checked = checked,
-            onCheckedChange = onCheckedChange,
+            onCheckedChange = if (enabled) onCheckedChange else null,
+            enabled = enabled,
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = MotoViolet,
+                checkedTrackColor = iconTint,
                 uncheckedThumbColor = MotoTextSecondary,
                 uncheckedTrackColor = MotoSurfaceVariant
             )

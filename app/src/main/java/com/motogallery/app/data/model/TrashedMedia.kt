@@ -19,9 +19,9 @@ data class TrashedMediaItem(
                 return vaultItem.daysRemainingInTrash
             }
             if (trashedTimeMs <= 0L) return 30
-            val elapsedMs = System.currentTimeMillis() - trashedTimeMs
+            val elapsedMs = (System.currentTimeMillis() - trashedTimeMs).coerceAtLeast(0L)
             val thirtyDaysMs = 30L * 24 * 60 * 60 * 1000L
             val remainingMs = thirtyDaysMs - elapsedMs
-            return (remainingMs / (24 * 60 * 60 * 1000L)).coerceAtLeast(0).toInt()
+            return ((remainingMs + 60_000L) / (24 * 60 * 60 * 1000L)).coerceIn(0, 30).toInt()
         }
 }

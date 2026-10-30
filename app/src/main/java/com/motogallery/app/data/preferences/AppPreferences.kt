@@ -55,6 +55,18 @@ class AppPreferences(context: Context) {
     private val _themeMode = MutableStateFlow(prefs.getString(KEY_THEME_MODE, "dark") ?: "dark")
     val themeMode: StateFlow<String> = _themeMode.asStateFlow()
 
+    private val _isHalloweenThemeEnabled = MutableStateFlow(prefs.getBoolean(KEY_HALLOWEEN_THEME, false))
+    val isHalloweenThemeEnabled: StateFlow<Boolean> = _isHalloweenThemeEnabled.asStateFlow()
+
+    private val _isSpecialAnimationsEnabled = MutableStateFlow(prefs.getBoolean(KEY_SPECIAL_ANIMATIONS, true))
+    val isSpecialAnimationsEnabled: StateFlow<Boolean> = _isSpecialAnimationsEnabled.asStateFlow()
+
+    private val _isFlyingBatsEnabled = MutableStateFlow(prefs.getBoolean(KEY_FLYING_BATS, true))
+    val isFlyingBatsEnabled: StateFlow<Boolean> = _isFlyingBatsEnabled.asStateFlow()
+
+    private val _isPumpkinEasterEggEnabled = MutableStateFlow(prefs.getBoolean(KEY_PUMPKIN_EASTER_EGG, true))
+    val isPumpkinEasterEggEnabled: StateFlow<Boolean> = _isPumpkinEasterEggEnabled.asStateFlow()
+
     fun setGridColumns(columns: Int) {
         val clamped = columns.coerceIn(2, 5)
         prefs.edit().putInt(KEY_GRID_COLUMNS, clamped).apply()
@@ -147,6 +159,26 @@ class AppPreferences(context: Context) {
         }
     }
 
+    fun setHalloweenThemeEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_HALLOWEEN_THEME, enabled).apply()
+        _isHalloweenThemeEnabled.value = enabled
+    }
+
+    fun setSpecialAnimationsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_SPECIAL_ANIMATIONS, enabled).apply()
+        _isSpecialAnimationsEnabled.value = enabled
+    }
+
+    fun setFlyingBatsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_FLYING_BATS, enabled).apply()
+        _isFlyingBatsEnabled.value = enabled
+    }
+
+    fun setPumpkinEasterEggEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_PUMPKIN_EASTER_EGG, enabled).apply()
+        _isPumpkinEasterEggEnabled.value = enabled
+    }
+
     fun resetAppearanceDefaults() {
         setWallpaperId("default")
         setWallpaperDimming(0.35f)
@@ -155,6 +187,10 @@ class AppPreferences(context: Context) {
         setThemeMode("dark")
         setDarkTheme(true)
         setDynamicColors(false)
+        setHalloweenThemeEnabled(false)
+        setSpecialAnimationsEnabled(true)
+        setFlyingBatsEnabled(true)
+        setPumpkinEasterEggEnabled(true)
     }
 
     companion object {
@@ -172,5 +208,9 @@ class AppPreferences(context: Context) {
         private const val KEY_WALLPAPER_BLUR = "wallpaper_blur"
         private const val KEY_ACCENT_COLOR = "accent_color_hex"
         private const val KEY_THEME_MODE = "theme_mode"
+        private const val KEY_HALLOWEEN_THEME = "halloween_theme_enabled"
+        private const val KEY_SPECIAL_ANIMATIONS = "special_animations_enabled"
+        private const val KEY_FLYING_BATS = "flying_bats_enabled"
+        private const val KEY_PUMPKIN_EASTER_EGG = "pumpkin_easter_egg_enabled"
     }
 }

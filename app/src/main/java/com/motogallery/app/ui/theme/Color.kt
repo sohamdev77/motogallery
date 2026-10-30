@@ -37,3 +37,19 @@ val MotoGradientBrush = Brush.linearGradient(
 val MotoDarkGradientBrush = Brush.linearGradient(
     colors = listOf(Color(0xFF1E1B4B), Color(0xFF3B0764), Color(0xFF431407))
 )
+
+// Halloween Fun Seasonal Theme Palette
+val MotoHalloweenOrange = Color(0xFFFF7518) // Signature Pumpkin Orange
+val MotoHalloweenAmber = Color(0xFFFFA726)  // Warm Spooky Glow
+val MotoHalloweenDarkBg = Color(0xFF090608) // Deep Eerie Obsidian Black
+val MotoHalloweenSurface = Color(0xFF140D10) // Eerie Dark Surface
+val MotoHalloweenSurfaceVariant = Color(0xFF22151B) // Spooky Card Surface
+val MotoHalloweenSurfaceHighlight = Color(0xFF331C28)
+val MotoHalloweenBorder = Color(0xFF4A253A)
+val MotoHalloweenPurple = Color(0xFF2B0E38) // Soft Eerie Purple Shadow / Accent
+val MotoHalloweenGlow = Color(0xFFFF9100)
+
+val MotoHalloweenGradientBrush = Brush.linearGradient(
+    colors = listOf(MotoHalloweenOrange, MotoHalloweenAmber, MotoHalloweenPurple)
+)
+

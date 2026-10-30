@@ -68,6 +68,36 @@ data class WallpaperConfig(
 
 val LocalWallpaperConfig = staticCompositionLocalOf { WallpaperConfig() }
 
+data class HalloweenConfig(
+    val isEnabled: Boolean = false,
+    val specialAnimationsEnabled: Boolean = true,
+    val flyingBatsEnabled: Boolean = true,
+    val pumpkinEasterEggEnabled: Boolean = true
+)
+
+val LocalHalloweenConfig = staticCompositionLocalOf { HalloweenConfig() }
+
+private val HalloweenColorScheme = darkColorScheme(
+    primary = MotoHalloweenOrange,
+    onPrimary = Color.Black,
+    primaryContainer = MotoHalloweenSurfaceVariant,
+    onPrimaryContainer = MotoHalloweenAmber,
+    secondary = MotoHalloweenAmber,
+    onSecondary = Color.Black,
+    secondaryContainer = MotoHalloweenSurfaceHighlight,
+    onSecondaryContainer = MotoHalloweenOrange,
+    tertiary = MotoHalloweenPurple,
+    onTertiary = Color.White,
+    background = MotoHalloweenDarkBg,
+    onBackground = MotoTextPrimary,
+    surface = MotoHalloweenSurface,
+    onSurface = MotoTextPrimary,
+    surfaceVariant = MotoHalloweenSurfaceVariant,
+    onSurfaceVariant = MotoTextSecondary,
+    outline = MotoHalloweenBorder,
+    error = MotoError
+)
+
 @Composable
 fun MotoGalleryTheme(
     darkTheme: Boolean = true, // Dark-first by design
@@ -76,14 +106,22 @@ fun MotoGalleryTheme(
     wallpaperDimming: Float = 0.35f,
     wallpaperBlur: Float = 0.20f,
     customAccentColor: Color? = null,
+    halloweenConfig: HalloweenConfig = HalloweenConfig(),
     content: @Composable () -> Unit
 ) {
     val isWallpaperActive = wallpaperTheme != WallpaperTheme.NONE
 
     val effectiveAccent = customAccentColor 
-        ?: (if (isWallpaperActive) wallpaperTheme.primaryAccent else MotoViolet)
+        ?: when {
+            halloweenConfig.isEnabled -> MotoHalloweenOrange
+            isWallpaperActive -> wallpaperTheme.primaryAccent
+            else -> MotoViolet
+        }
 
     val baseColorScheme = when {
+        halloweenConfig.isEnabled -> HalloweenColorScheme.copy(
+            primary = effectiveAccent
+        )
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -100,26 +138,38 @@ fun MotoGalleryTheme(
         )
     }
 
+    val defaultBg = when {
+        halloweenConfig.isEnabled -> MotoHalloweenDarkBg
+        darkTheme -> MotoBackground
+        else -> MotoLightBackground
+    }
+
+    val defaultSurface = when {
+        halloweenConfig.isEnabled -> MotoHalloweenSurface
+        darkTheme -> MotoSurface
+        else -> MotoLightSurface
+    }
+
     val wallpaperConfig = WallpaperConfig(
         wallpaper = wallpaperTheme,
         dimming = wallpaperDimming,
         blur = wallpaperBlur,
         isWallpaperActive = isWallpaperActive,
-        backgroundColor = if (isWallpaperActive) Color.Transparent else (if (darkTheme) MotoBackground else MotoLightBackground),
+        backgroundColor = if (isWallpaperActive) Color.Transparent else defaultBg,
         surfaceColor = if (isWallpaperActive) {
-            if (darkTheme) MotoSurface.copy(alpha = 0.82f) else MotoLightSurface.copy(alpha = 0.85f)
+            defaultSurface.copy(alpha = 0.85f)
         } else {
-            if (darkTheme) MotoSurface else MotoLightSurface
+            defaultSurface
         },
         topBarColor = if (isWallpaperActive) {
-            if (darkTheme) MotoBackground.copy(alpha = 0.75f) else MotoLightBackground.copy(alpha = 0.80f)
+            defaultBg.copy(alpha = 0.78f)
         } else {
-            if (darkTheme) MotoBackground else MotoLightBackground
+            defaultBg
         },
         bottomBarColor = if (isWallpaperActive) {
-            if (darkTheme) MotoSurface.copy(alpha = 0.85f) else MotoLightSurface.copy(alpha = 0.90f)
+            defaultSurface.copy(alpha = 0.88f)
         } else {
-            if (darkTheme) MotoSurface else MotoLightSurface
+            defaultSurface
         }
     )
 
@@ -141,13 +191,16 @@ fun MotoGalleryTheme(
                 window.statusBarColor = statusBarColor
                 window.navigationBarColor = navBarColor
                 val insetsController = WindowCompat.getInsetsController(window, view)
-                insetsController.isAppearanceLightStatusBars = !darkTheme
-                insetsController.isAppearanceLightNavigationBars = !darkTheme
+                insetsController.isAppearanceLightStatusBars = !darkTheme && !halloweenConfig.isEnabled
+                insetsController.isAppearanceLightNavigationBars = !darkTheme && !halloweenConfig.isEnabled
             }
         }
     }
 
-    CompositionLocalProvider(LocalWallpaperConfig provides wallpaperConfig) {
+    CompositionLocalProvider(
+        LocalWallpaperConfig provides wallpaperConfig,
+        LocalHalloweenConfig provides halloweenConfig
+    ) {
         MaterialTheme(
             colorScheme = baseColorScheme,
             typography = Typography,

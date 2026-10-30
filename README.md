@@ -107,11 +107,28 @@ MotoGallery is a real, native Android gallery application crafted specifically f
   - **Persistent**: Preferences saved locally via Jetpack DataStore.
   - **Distraction-Free Media**: Fullscreen photo viewer and ExoPlayer video player automatically isolate media against a pure black canvas.
 
+### 9. Halloween Fun Update (Seasonal Visuals & Easter Egg)
+- **Festive Halloween Aesthetic**:
+  - **Color Palette**: Signature Pumpkin Orange (`#FF7518`), Spooky Amber (`#FFA726`), Deep Eerie Obsidian (`#090608`), and eerie purple accent shadows (`#2B0E38`).
+  - Warm spooky glows across navigation, cards, and interactive elements.
+- **Ambient Halloween Decorations**:
+  - **Cobweb Corners**: Delicate procedural spiderweb corner accents on top corners.
+  - **Flying Bats Animation**: Lightweight, graceful bat silhouettes gliding smoothly across the top screen area.
+- **Settings Pumpkin Easter Egg**:
+  - A hidden, playful animated Jack-o'-lantern pops up in Settings with a creeping smile that widens into a cheeky carved grin, complete with candlelit interior glow!
+  - Auto-dismisses smoothly after 2.6 seconds or on tap.
+  - Session-aware: activates once per app session to avoid interruption.
+- **Accessibility & Special Animations Toggles** (**Settings → Seasonal Theme / Special Effects**):
+  - **Enable Halloween Theme**: Toggle seasonal colors on/off.
+  - **Enable Special Animations**: Master motion toggle. When disabled, bats and animated popups are completely silenced while keeping the static theme intact.
+  - **Enable Flying Bats**: Individual toggle for bat flight.
+  - **Enable Pumpkin Easter Egg**: Individual toggle for the playful settings appearance.
+
 ---
 
-## Interface Design
+## Interface Design & Visual Direction
 
-MotoGallery features a custom dark-first design palette inspired by modern Motorola OLED displays:
+MotoGallery is crafted with a clean, modern aesthetic featuring soft rounded corners, smooth gradients, and elegant surfaces inspired by the cosmic mountain visual language:
 
 | Element | Hex Code | Purpose |
 |---|---|---|
@@ -121,10 +138,14 @@ MotoGallery features a custom dark-first design palette inspired by modern Motor
 | **Violet Accent** | `#A855F7` | Primary brand accent & active indicators |
 | **Pink Accent** | `#EC65B5` | Secondary accent & favorite heart badge |
 | **Orange Accent** | `#FFA34D` | Tertiary accent & warning indicators |
+| **Halloween Pumpkin** | `#FF7518` | Seasonal Halloween primary brand accent |
+| **Halloween Amber** | `#FFA726` | Seasonal warm spooky glow & highlight |
+| **Halloween Dark** | `#090608` | Seasonal eerie obsidian background |
 
-- **6-Tab Navigation**: `Photos` | `Albums` | `Videos` | `Swipe` | `Private` | `Settings`
+- **6-Tab Navigation**: `Photos` | `Swipe` | `Albums` | `Videos` | `Private` | `Settings`
 - **Dynamic Color Support**: Optional toggle in Settings to adapt colors to Android 12+ wallpaper themes.
 - **Whole-App Built-in Wallpapers**: 8 bundled themes with real-time dimming and frosted glass surfaces.
+- **Seasonal Halloween Mode**: Dedicated seasonal toggle layer with optional animations.
 - **Optional Clean Light Theme**: For bright outdoor viewing.
 
 ---
@@ -183,7 +204,7 @@ MotoGallery does not use unrestricted direct filesystem access or dangerous `MAN
 
 ### Option A: Download Pre-Built APK from GitHub Releases
 1. Open the repository's **Releases** page on your Motorola phone browser.
-2. Under the latest release, download `MotoGallery-v1.1.0-debug.apk`.
+2. Under the latest release, download `MotoGallery-v1.2.0-debug.apk`.
 3. Open the downloaded `.apk` from your notification shade or Downloads folder.
 4. When prompted by Android ("For your security, your phone is not allowed to install unknown apps from this source"), tap **Settings** and toggle **Allow from this source**.
 5. Tap **Install** and launch **MotoGallery**.
@@ -192,7 +213,7 @@ MotoGallery does not use unrestricted direct filesystem access or dangerous `MAN
 1. Navigate to the **Actions** tab in this repository.
 2. Click on the latest workflow run on `main`.
 3. Scroll down to the **Artifacts** section and download `MotoGallery-Debug-APK.zip`.
-4. Extract the zip file and transfer `MotoGallery-v1.1.0-debug.apk` to your phone via USB or Google Drive / Files.
+4. Extract the zip file and transfer `MotoGallery-v1.2.0-debug.apk` to your phone via USB or Google Drive / Files.
 
 ---
 
@@ -216,7 +237,7 @@ cd MotoGallery
 ./gradlew assembleDebug
 
 # Output APK location:
-# app/build/outputs/apk/debug/MotoGallery-v1.1.0-debug.apk
+# app/build/outputs/apk/debug/MotoGallery-v1.2.0-debug.apk
 ```
 
 ---
@@ -225,6 +246,11 @@ cd MotoGallery
 
 The following manual test checklist is verified on Motorola devices (Moto G series, Motorola Edge series):
 
+- [x] **New Visual Language & App Icon**: High-resolution galaxy mountain squircle launcher icons properly rendered across all density buckets (`mdpi`, `hdpi`, `xhdpi`, `xxhdpi`, `xxxhdpi`) and adaptive icon masks.
+- [x] **Halloween Seasonal Theme**: Vibrant `#FF7518` pumpkin orange and deep `#090608` obsidian theme activates cleanly across all gallery feeds, albums, videos, swipe clean, recently deleted, and settings.
+- [x] **Decorative Flying Bats & Cobwebs**: Procedural cobweb corners render gracefully; lightweight animated bats float across screen headers without impacting scroll performance or intercepting touches.
+- [x] **Settings Pumpkin Easter Egg**: Scary smiling pumpkin pops up with an animated widening grin and warm candlelit glow on initial entry, auto-dismissing after 2.6s or upon tap.
+- [x] **Reduced Motion & Accessibility Controls**: Toggling off "Special Animations" instantly silences flying bats and pumpkin popup while preserving static Halloween theming.
 - [x] **Offline Reliability**: App functions with zero network connectivity in Airplane Mode. No crashes, no network timeouts, no analytics polling.
 - [x] **Screen Rotation**: Fullscreen video player and photo editor retain playback state, zoom level, and adjustments across 90° and 180° orientation changes.
 - [x] **Background Auto-Lock**: Vault immediately locks when switching to the home screen or another app. PIN or fingerprint is required upon return.
@@ -244,7 +270,26 @@ The following manual test checklist is verified on Motorola devices (Moto G seri
 
 ## Changelog
 
-### v1.1.0 — Swipe Clean + Wallpaper Themes Update (Current)
+### v1.2.0 — Swipe Clean + Wallpaper Themes + Halloween Fun Update (Current)
+- **New App Icon & Visual Inspiration**:
+  - Replaced legacy launcher icons with a custom high-definition galaxy mountain visual language.
+  - Deep cosmic nebula sky, glowing full moon, and frosted mountain shapes inside a neon squircle.
+  - Complete Android adaptive icon support across `mipmap-anydpi-v26` and all pixel density buckets (`mdpi` through `xxxhdpi`).
+- **Halloween Fun Update (Seasonal Visual Mode)**:
+  - Curated Halloween palette: Pumpkin Orange (`#FF7518`), Spooky Amber (`#FFA726`), Eerie Obsidian Dark (`#090608`), and eerie purple accent shadows.
+  - Ambient decorations: procedural canvas cobweb corners and floating nocturnal bat silhouettes gliding smoothly across screen headers.
+  - Settings scary pumpkin easter egg: Jack-o'-lantern pops up with a widening carved grin animation, candlelit glow, and auto-dismisses after 2.6s (with tap-to-dismiss).
+  - Dedicated **Settings → Seasonal Theme / Special Effects** section with granular toggles for Halloween Theme, Special Animations, Flying Bats, and Pumpkin Easter Egg.
+  - Reduced-motion accessible: Turning off special animations instantly removes flying bats and easter egg animations while keeping the static theme active.
+- **Swipe Clean Optimization**:
+  - GPU hardware-accelerated layer rendering with `graphicsLayer`.
+  - Underlying card preview rendering for instant visibility of upcoming items in the card stack.
+  - Coil image memory preloading with disk cache optimization for zero gesture lag.
+- **Testing & Verification**:
+  - Added `SeasonalThemeTest` suite validating Halloween configurations, animation inhibition logic, and single-session easter egg memory.
+  - 100% test pass rate across all 39 unit tests in `:app:testDebugUnitTest` and `:app:testReleaseUnitTest`.
+
+### v1.1.0 — Swipe Clean + Wallpaper Themes Initial Update
 - **Swipe Clean Experience**:
   - Tinder-style interactive card interface with spring physics, rotation tilt, and haptic feedback.
   - Dedicated "Swipe" navigation tab in bottom bar.

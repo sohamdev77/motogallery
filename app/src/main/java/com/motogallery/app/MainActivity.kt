@@ -68,6 +68,11 @@ class MainActivity : FragmentActivity() {
             val wallpaperBlur by app.preferences.wallpaperBlur.collectAsState()
             val accentColorHex by app.preferences.accentColor.collectAsState()
 
+            val isHalloweenTheme by app.preferences.isHalloweenThemeEnabled.collectAsState()
+            val isSpecialAnimations by app.preferences.isSpecialAnimationsEnabled.collectAsState()
+            val isFlyingBats by app.preferences.isFlyingBatsEnabled.collectAsState()
+            val isPumpkinEasterEgg by app.preferences.isPumpkinEasterEggEnabled.collectAsState()
+
             val wallpaperTheme = WallpaperTheme.fromId(wallpaperId)
             val customAccent = if (accentColorHex.isNotEmpty()) {
                 try {
@@ -77,13 +82,21 @@ class MainActivity : FragmentActivity() {
                 }
             } else null
 
+            val halloweenConfig = com.motogallery.app.ui.theme.HalloweenConfig(
+                isEnabled = isHalloweenTheme,
+                specialAnimationsEnabled = isSpecialAnimations,
+                flyingBatsEnabled = isFlyingBats,
+                pumpkinEasterEggEnabled = isPumpkinEasterEgg
+            )
+
             MotoGalleryTheme(
                 darkTheme = isDarkTheme,
                 dynamicColor = useDynamicColors,
                 wallpaperTheme = wallpaperTheme,
                 wallpaperDimming = wallpaperDimming,
                 wallpaperBlur = wallpaperBlur,
-                customAccentColor = customAccent
+                customAccentColor = customAccent,
+                halloweenConfig = halloweenConfig
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     // Whole-App Wallpaper Background Layer
@@ -104,7 +117,7 @@ class MainActivity : FragmentActivity() {
 
                     Surface(
                         modifier = Modifier.fillMaxSize(),
-                        color = if (wallpaperTheme.drawableRes != 0) Color.Transparent else MotoBackground
+                        color = if (wallpaperTheme.drawableRes != 0) Color.Transparent else (if (isHalloweenTheme) com.motogallery.app.ui.theme.MotoHalloweenDarkBg else MotoBackground)
                     ) {
                         val navController = rememberNavController()
 
@@ -118,6 +131,9 @@ class MainActivity : FragmentActivity() {
                             }
                         )
                     }
+
+                    // Ambient Halloween seasonal decorations (cobwebs & optional flying bats)
+                    com.motogallery.app.ui.screens.seasonal.HalloweenAmbientOverlay()
                 }
             }
         }

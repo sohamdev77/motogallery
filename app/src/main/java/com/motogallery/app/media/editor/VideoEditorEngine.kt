@@ -125,7 +125,10 @@ class VideoEditorEngine(private val context: Context) {
                         bufferInfo.offset = 0
                         bufferInfo.size = sampleSize
                         bufferInfo.presentationTimeUs = (sampleTime - ptsOffsetUs).coerceAtLeast(0L)
-                        bufferInfo.flags = extractor.sampleFlags
+                        val sampleFlags = extractor.sampleFlags
+                        bufferInfo.flags = if ((sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC) != 0) {
+                            MediaCodec.BUFFER_FLAG_KEY_FRAME
+                        } else 0
 
                         muxer.writeSampleData(muxerTrack, buffer, bufferInfo)
 

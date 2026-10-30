@@ -26,6 +26,10 @@ data class SettingsUiState(
     val isBiometricEnabled: Boolean = false,
     val isBiometricSupported: Boolean = false,
     val autoLockDelaySeconds: Int = 0,
+    val isHalloweenTheme: Boolean = false,
+    val isSpecialAnimations: Boolean = true,
+    val isFlyingBats: Boolean = true,
+    val isPumpkinEasterEgg: Boolean = true,
     val photoCount: Int = 0,
     val photoSizeBytes: Long = 0L,
     val videoCount: Int = 0,
@@ -64,7 +68,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val useDynamicColors: Boolean,
         val gridColumns: Int,
         val isBiometricEnabled: Boolean,
-        val autoLockDelaySeconds: Int
+        val autoLockDelaySeconds: Int,
+        val isHalloweenTheme: Boolean,
+        val isSpecialAnimations: Boolean,
+        val isFlyingBats: Boolean,
+        val isPumpkinEasterEgg: Boolean
     )
 
     private val preferencesFlow = combine(
@@ -72,9 +80,23 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         preferences.useDynamicColors,
         preferences.gridColumns,
         preferences.vaultBiometricEnabled,
-        preferences.vaultAutoLockDelay
-    ) { dark, dynamicColors, cols, bioEnabled, autoLock ->
-        PreferencesState(dark, dynamicColors, cols, bioEnabled, autoLock)
+        preferences.vaultAutoLockDelay,
+        preferences.isHalloweenThemeEnabled,
+        preferences.isSpecialAnimationsEnabled,
+        preferences.isFlyingBatsEnabled,
+        preferences.isPumpkinEasterEggEnabled
+    ) { args: Array<Any> ->
+        PreferencesState(
+            isDarkTheme = args[0] as Boolean,
+            useDynamicColors = args[1] as Boolean,
+            gridColumns = args[2] as Int,
+            isBiometricEnabled = args[3] as Boolean,
+            autoLockDelaySeconds = args[4] as Int,
+            isHalloweenTheme = args[5] as Boolean,
+            isSpecialAnimations = args[6] as Boolean,
+            isFlyingBats = args[7] as Boolean,
+            isPumpkinEasterEgg = args[8] as Boolean
+        )
     }
 
     val uiState: StateFlow<SettingsUiState> = combine(
@@ -89,6 +111,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             isBiometricEnabled = prefs.isBiometricEnabled,
             isBiometricSupported = biometricManager.isBiometricAvailable(),
             autoLockDelaySeconds = prefs.autoLockDelaySeconds,
+            isHalloweenTheme = prefs.isHalloweenTheme,
+            isSpecialAnimations = prefs.isSpecialAnimations,
+            isFlyingBats = prefs.isFlyingBats,
+            isPumpkinEasterEgg = prefs.isPumpkinEasterEgg,
             photoCount = stats.photoStats.first,
             photoSizeBytes = stats.photoStats.second,
             videoCount = stats.videoStats.first,
@@ -136,6 +162,22 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun setAutoLockDelay(delaySeconds: Int) {
         preferences.setVaultAutoLockDelay(delaySeconds)
+    }
+
+    fun setHalloweenTheme(enabled: Boolean) {
+        preferences.setHalloweenThemeEnabled(enabled)
+    }
+
+    fun setSpecialAnimations(enabled: Boolean) {
+        preferences.setSpecialAnimationsEnabled(enabled)
+    }
+
+    fun setFlyingBats(enabled: Boolean) {
+        preferences.setFlyingBatsEnabled(enabled)
+    }
+
+    fun setPumpkinEasterEgg(enabled: Boolean) {
+        preferences.setPumpkinEasterEggEnabled(enabled)
     }
 
     fun changeVaultPin(oldPin: String, newPin: String): Boolean {
